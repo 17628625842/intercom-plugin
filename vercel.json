@@ -1,0 +1,65 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/admin/refund/(.*)",
+      "dest": "/server.js",
+      "methods": ["POST"]
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/canvas/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/intercom/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/payment/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/create-payment",
+      "dest": "/server.js",
+      "methods": ["POST"]
+    },
+    {
+      "src": "/login",
+      "dest": "/server.js",
+      "methods": ["POST"]
+    },
+    {
+      "src": "/logout",
+      "dest": "/server.js",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/tip/(.*)",
+      "dest": "/server.js",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/debug/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/export/(.*)",
+      "dest": "/server.js",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/server.js"
+    }
+  ]
+}

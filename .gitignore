@@ -1,0 +1,9 @@
+node_modules/
+.env
+.DS_Store
+*.log
+.vercel
+# Excel files
+*.xlsx
+*.xls
+temp_exports/
