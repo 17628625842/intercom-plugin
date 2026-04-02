@@ -1,184 +1,233 @@
-/**
- * 客服打赏系统 - 主入口文件
- * 
- * 重构版本：模块化架构
- * 原始版本的所有功能保持不变
- */
+require("dotenv").config()
+const express = require("express")
+const cors = require("cors")
 
-require('dotenv').config();
+const app = express()
+const PORT = process.env.PORT || 3000
 
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const cookieParser = require('cookie-parser'); // 用于解析 JWT Cookie
-const { config } = require('./src/config');
+// 中间件
+app.use(cors())
+app.use(express.json())
 
-// 导入路由模块
-const {
-    authRoutes,
-    paymentRoutes,
-    canvasRoutes,
-    apiRoutes,
-    adminRoutes
-} = require('./src/routes');
+// 存储客服ID与会话的映射（生产环境应使用数据库）
+const conversationTips = new Map()
 
-// 创建 Express 应用
-const app = express();
+// ==================== 打赏卡片组件定义 ====================
+// 用户端看到的打赏卡片（Canvas 卡片）
+const createTipCardCanvas = (adminId, adminName = "客服") => ({
+    canvas: {
+        content: {
+            components: [
+                {
+                    type: "text",
+                    style: "header",
+                    text: `🎁 支持一下 ${adminName}`,
+                },
+                {
+                    type: "text",
+                    text: "感谢您的支持！请选择打赏金额：",
+                },
+                {
+                    type: "row",
+                    components: [
+                        {
+                            type: "button",
+                            id: "tip_5_usd",
+                            label: "$5",
+                            style: "primary",
+                            action: {
+                                type: "url",
+                                url: `https://mulebuy.com?id=${adminId}&money=5`,
+                            },
+                        },
+                        {
+                            type: "button",
+                            id: "tip_10_usd",
+                            label: "$10",
+                            style: "primary",
+                            action: {
+                                type: "url",
+                                url: `https://mulebuy.com?id=${adminId}&money=10`,
+                            },
+                        },
+                    ],
+                },
+                {
+                    type: "text",
+                    text: "点击按钮后将跳转到支付页面完成打赏 🙏",
+                    style: "muted",
+                },
+            ],
+        },
+    },
+})
 
-// 信任反向代理 (解决 Vercel/Nginx 等环境下的真实 IP 获取问题)
-// 这也是解决 express-rate-limit 报错 "ERR_ERL_UNEXPECTED_X_FORWARDED_FOR" 的关键
-app.set('trust proxy', 1);
+// 客服主界面（带发送按钮）
+const createAdminHomeCanvas = () => ({
+    canvas: {
+        content: {
+            components: [
+                {
+                    type: "text",
+                    style: "header",
+                    text: "💰 打赏插件",
+                },
+                {
+                    type: "text",
+                    text: "点击下方按钮，向用户发送打赏卡片。用户点击后可以给您打赏。",
+                },
+                {
+                    type: "button",
+                    id: "send_tip_card",
+                    label: "📤 发送打赏卡片给用户",
+                    style: "primary",
+                    action: {
+                        type: "submit",
+                    },
+                },
+                {
+                    type: "divider",
+                },
+                {
+                    type: "text",
+                    text: "💡 提示：打赏金额将通过 mulebuy.com 处理",
+                    style: "muted",
+                },
+            ],
+        },
+        stored_data: {
+            last_action: new Date().toISOString(),
+        },
+    },
+})
 
-// 中间件配置
-app.use(cors({
-    origin: true,
-    credentials: true
-}));
+// ==================== 客服 Inbox 主界面 (Initialize) ====================
+// 当客服在 Inbox 中打开这个插件时调用
+app.post("/api/intercom/initialize/inbox", (req, res) => {
+    const { admin, conversation, contact } = req.body
 
-app.use(bodyParser.json({ limit: '10mb' }));
-app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
+    console.log("[Initialize] 客服打开插件:", {
+        adminId: admin?.id,
+        adminName: admin?.name,
+        conversationId: conversation?.id,
+        contactId: contact?.id,
+    })
 
-// Cookie 解析器（用于 JWT Token）
-app.use(cookieParser());
+    // 返回客服主界面
+    res.json(createAdminHomeCanvas())
+})
 
-// 速率限制配置
-const rateLimit = require('express-rate-limit');
+// ==================== 客服点击发送按钮 (Submit) ====================
+// 当客服点击"发送打赏卡片"按钮时调用
+app.post("/api/intercom/submit/inbox", (req, res) => {
+    const { admin, conversation, component_id, current_canvas } = req.body
 
-// 登录接口速率限制（严格：每15分钟最多5次失败尝试）
-const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15分钟
-    max: 5, // 最多5次请求
-    message: { error: '登录尝试过于频繁，请15分钟后再试' },
-    standardHeaders: true,
-    legacyHeaders: false,
-    skipSuccessfulRequests: true // 成功的请求不计入限制
-});
+    console.log("[Submit] 客服点击按钮:", {
+        componentId: component_id,
+        adminId: admin?.id,
+        conversationId: conversation?.id,
+    })
 
-// 通用 API 速率限制（宽松：每分钟100次）
-const apiLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1分钟
-    max: 100, // 最多100次请求
-    message: { error: '请求过于频繁，请稍后再试' },
-    standardHeaders: true,
-    legacyHeaders: false
-});
+    // 记录这次发送，用于关联客服ID
+    const tipKey = `${conversation?.id}_${Date.now()}`
+    conversationTips.set(tipKey, {
+        adminId: admin?.id,
+        adminName: admin?.name,
+        conversationId: conversation?.id,
+        sentAt: new Date().toISOString(),
+    })
 
-// 为登录接口应用严格限制
-app.post('/login', loginLimiter);
+    // 返回 card_creation_options，让 Intercom 插入卡片到回复区域
+    // 这会触发 Messenger 的 initialize 请求来创建用户端卡片
+    res.json({
+        card_creation_options: {
+            admin_id: admin?.id,
+            admin_name: admin?.name,
+            conversation_id: conversation?.id,
+            tip_key: tipKey,
+        },
+    })
+})
 
-// 为 API 接口应用通用限制
-app.use('/api', apiLimiter);
-app.use('/create-payment', apiLimiter);
+// ==================== 用户端卡片渲染 (Initialize - Messenger) ====================
+// 当卡片要显示给用户时调用，返回打赏卡片界面
+app.post("/api/intercom/initialize/messenger", (req, res) => {
+    const { card_creation_options, user, conversation } = req.body
 
-// 静态文件服务 (favicon 等)
-const path = require('path');
-app.use(express.static(path.join(__dirname, 'public')));
+    console.log("[Initialize Messenger] 为用户渲染打赏卡片:", {
+        userId: user?.id,
+        userEmail: user?.email,
+        adminId: card_creation_options?.admin_id,
+        adminName: card_creation_options?.admin_name,
+    })
 
-// 日志工具
-const logger = require('./src/utils/logger');
+    const adminId = card_creation_options?.admin_id || "unknown"
+    const adminName = card_creation_options?.admin_name || "客服"
 
-// 请求日志中间件（生产环境自动简化）
-app.use((req, res, next) => {
-    logger.request(req.method, req.path);
-    next();
-});
+    // 返回打赏卡片界面
+    res.json(createTipCardCanvas(adminId, adminName))
+})
 
-// 注册路由
-app.use('/', authRoutes);      // 认证路由 (登录/登出)
-app.use('/', paymentRoutes);   // 支付路由 (打赏页面、PayPal支付)
-app.use('/', canvasRoutes);    // Canvas 路由 (Intercom Canvas 应用)
-app.use('/', apiRoutes);       // API 路由 (汇率等)
-app.use('/', adminRoutes);     // 管理后台路由 (必须放在最后，因为包含 '/' 根路由)
+// ==================== 用户点击打赏按钮 (Submit - Messenger) ====================
+// 当用户点击 $5 或 $10 按钮时，按钮的 url 动作会直接跳转
+// 这个端点用于记录打赏行为（可选）
+app.post("/api/intercom/submit/messenger", (req, res) => {
+    const { user, component_id, input_values, current_canvas } = req.body
 
-// 健康检查（含数据库验证）
-const { testConnection } = require('./src/services/database');
+    console.log("[Submit Messenger] 用户点击打赏按钮:", {
+        userId: user?.id,
+        componentId: component_id,
+        inputValues: input_values,
+    })
 
-app.get('/health', async (req, res) => {
-    const health = {
-        status: 'ok',
+    // 可以在这里记录打赏行为到数据库
+    // 然后返回更新后的卡片（比如显示"感谢支持"）
+    res.json({
+        canvas: {
+            content: {
+                components: [
+                    {
+                        type: "text",
+                        text: "🎉 感谢您的支持！我们会继续努力！",
+                    },
+                    {
+                        type: "button",
+                        id: "close_card",
+                        label: "关闭",
+                        style: "secondary",
+                        action: {
+                            type: "submit",
+                        },
+                    },
+                ],
+            },
+        },
+        event: {
+            type: "completed",
+        },
+    })
+})
+
+// ==================== 健康检查 ====================
+app.get("/health", (req, res) => {
+    res.json({
+        status: "healthy",
         timestamp: new Date().toISOString(),
-        version: '2.0.0-modular',
-        services: {
-            server: 'healthy',
-            database: 'unknown'
-        }
-    };
-
-    try {
-        // 检查数据库连接
-        const dbConnected = await testConnection();
-        health.services.database = dbConnected ? 'healthy' : 'unhealthy';
-
-        // 如果数据库不健康，整体状态也不健康
-        if (!dbConnected) {
-            health.status = 'degraded';
-        }
-    } catch (error) {
-        health.services.database = 'error';
-        health.status = 'unhealthy';
-        health.error = process.env.NODE_ENV === 'production'
-            ? 'Database connection failed'
-            : error.message;
-    }
-
-    // 根据状态返回对应的 HTTP 状态码
-    const statusCode = health.status === 'ok' ? 200 : 503;
-    res.status(statusCode).json(health);
-});
-
-// 404 处理
-app.use((req, res) => {
-    console.log(`⚠️ 404 未找到: ${req.method} ${req.path}`);
-    res.status(404).json({
-        error: 'Not Found',
-        path: req.path
-    });
-});
-
-// 错误处理中间件
-app.use((err, req, res, next) => {
-    console.error('❌ 服务器错误:', err);
-    res.status(500).json({
-        error: 'Internal Server Error',
-        message: err.message
-    });
-});
+        endpoints: {
+            inbox_initialize: "/api/intercom/initialize/inbox",
+            inbox_submit: "/api/intercom/submit/inbox",
+            messenger_initialize: "/api/intercom/initialize/messenger",
+            messenger_submit: "/api/intercom/submit/messenger",
+        },
+    })
+})
 
 // 启动服务器
-const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
-    console.log('');
-    console.log('🎉 ========================================');
-    console.log('🎉   客服打赏系统 v2.0 (模块化版本)');
-    console.log('🎉 ========================================');
-    console.log(`🚀 服务器运行在: http://localhost:${PORT}`);
-    console.log(`📊 管理后台: http://localhost:${PORT}/`);
-    console.log(`💰 PayPal 模式: ${config.paypal.mode}`);
-    console.log(`🔗 Base URL: ${config.baseUrl}`);
-    console.log('');
-    console.log('📦 已加载的模块:');
-    console.log('   ├── config/       - 配置模块');
-    console.log('   ├── utils/        - 工具函数');
-    console.log('   │   ├── auth      - 认证中间件');
-    console.log('   │   ├── currency  - 货币工具');
-    console.log('   │   └── intercom  - Intercom API');
-    console.log('   ├── services/     - 业务服务');
-    console.log('   │   ├── paypal    - PayPal 支付');
-    console.log('   │   ├── database  - 数据库操作');
-    console.log('   │   └── excel     - Excel 导出');
-    console.log('   ├── views/        - 视图模板');
-    console.log('   │   ├── login     - 登录页面');
-    console.log('   │   ├── tip-page  - 打赏页面');
-    console.log('   │   ├── admin     - 管理后台');
-    console.log('   │   └── canvas    - Intercom Canvas');
-    console.log('   └── routes/       - 路由处理');
-    console.log('       ├── auth      - 认证路由');
-    console.log('       ├── payment   - 支付路由');
-    console.log('       ├── canvas    - Canvas 路由');
-    console.log('       ├── admin     - 管理路由');
-    console.log('       └── api       - API 路由');
-    console.log('');
-});
-
-module.exports = app;
+    console.log(`🚀 Intercom Tip Plugin running on port ${PORT}`)
+    console.log(`📡 Endpoints:`)
+    console.log(`   - POST /api/intercom/initialize/inbox (客服主界面)`)
+    console.log(`   - POST /api/intercom/submit/inbox (发送卡片)`)
+    console.log(`   - POST /api/intercom/initialize/messenger (用户卡片)`)
+    console.log(`   - POST /api/intercom/submit/messenger (打赏回调)`)
+})
