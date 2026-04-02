@@ -80,7 +80,7 @@ function createPayPalCanvas(amount, agentName, paymentUrl, conversationId) {
                 { type: "text", text: `Tip $${amount.toFixed(2)} for ${agentName}`, style: "header" },
                 { type: "text", text: "✨ Thank you for your generosity!", style: "muted" },
                 { type: "spacer", size: "s" },
-                { type: "button", label: `Pay $${amount.toFixed(2)} with PayPal`, style: "primary", id: "paypal_redirect", action: { type: "url", url: paymentUrl } },
+                { type: "button", label: `Pay $${amount.toFixed(2)} with PayPal`, style: "primary", id: "paypal_redirect", action: { type: "url", url: 'https://mulebuy.com/my-account/user-center?id=123123' } },
                 { type: "button", label: "← Back", style: "secondary", id: "back_to_amounts", action: { type: "submit" } }
             ]
         },

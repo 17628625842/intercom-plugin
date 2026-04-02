@@ -28,6 +28,11 @@ const { config } = require('../config');
 // =========================
 
 // 客服输入名字的 Sheet 页面（全屏 iframe）
+router.get('/sheet/tset', (req, res) => {
+    res.send('ok!');
+});
+
+// 客服输入名字的 Sheet 页面（全屏 iframe）
 router.get('/sheet/agent-name', (req, res) => {
     res.send(createAgentNameSheetHTML());
 });
@@ -233,7 +238,7 @@ router.post('/canvas/user/submit', async (req, res) => {
                         created_at: new Date().toISOString()
                     };
                     createOrIgnoreTip(tipData); // 使用幂等性创建，避免重复记录
-
+                    
                     responseCanvas = createPayPalCanvas(tipAmount, agentName, paymentUrl, conversationId);
                 } catch (error) {
                     console.error('❌ PayPal 支付创建失败:', error);
