@@ -124,7 +124,7 @@ router.post('/canvas/user/submit-sheet', async (req, res) => {
 // Canvas 初始化 - 用户端
 router.post('/canvas/user/initialize', async (req, res) => {
     try {
-        console.log('🎨 Canvas 用户端初始化请求:', JSON.stringify(req.body, null, 2));
+        // console.log('🎨 Canvas 用户端初始化请求:', JSON.stringify(req.body, null, 2));
 
         const conversationId = extractConversationId(req);
 
@@ -308,7 +308,7 @@ router.post('/canvas/user/submit', async (req, res) => {
 // Intercom 插件初始化 - 客服端
 router.post('/intercom/initialize', async (req, res) => {
     try {
-        console.log('🔧 客服端插件初始化请求:', JSON.stringify(req.body, null, 2));
+        // console.log('🔧 客服端插件初始化请求:', JSON.stringify(req.body, null, 2));
 
         const conversation = req.body.conversation || {};
         const conversationId = extractConversationId(req) || conversation.id || 'unknown';
@@ -327,7 +327,7 @@ router.post('/intercom/initialize', async (req, res) => {
 // 处理客服操作
 router.post('/intercom/submit', async (req, res) => {
     try {
-        console.log('📝 客服端插件提交请求:', JSON.stringify(req.body, null, 2));
+        // console.log('📝 客服端插件提交请求:', JSON.stringify(req.body, null, 2));
 
         const { component_id, canvas } = req.body;
         const conversationId = extractConversationId(req) || canvas?.metadata?.conversationId || 'unknown';
