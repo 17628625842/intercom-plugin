@@ -59,10 +59,12 @@ const config = {
 };
 
 // 创建 Supabase 客户端
-const supabase = createClient(
-    config.supabase.url,
-    config.supabase.serviceRoleKey
-);
+// const supabase = createClient(
+//     config.supabase.url,
+//     config.supabase.serviceRoleKey
+// );
+
+const supabase = {}
 
 module.exports = {
     config,
