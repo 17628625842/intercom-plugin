@@ -19,7 +19,8 @@ function createUserTipCanvas(agentName, conversationId) {
                 { type: "button", label: "💵 $5", style: "primary", id: "tip_5", action: { type: "submit" } },
                 { type: "button", label: "💵 $10", style: "primary", id: "tip_10", action: { type: "submit" } },
                 { type: "button", label: "💵 $20", style: "primary", id: "tip_20", action: { type: "submit" } },
-                { type: "button", label: "✨ Custom Amount 11", style: "secondary", id: "tip_custom", action: { type: "url", url: 'https://mulebuy.com/my-account/user-center?id=123' } }
+                { type: "button", label: "✨ Custom Amount 11", style: "secondary", id: "tip_custom", action: { type: "url", url: 'https://mulebuy.com/my-account/user-center?id=123' } },
+                { type: "button", label: "✨ Custom Amount app", style: "secondary", id: "tip_custom", action: { type: "url", url: 'mulebuy://?id=8qdq&num=10' } },
             ]
         },
         metadata: { agentName, conversationId }
