@@ -150,6 +150,7 @@ app.post("/canvas/user/submit", (req, res) => {
             content: {
                 components: [
                     { type: "button", label: "去支付", style: "primary", id: "TO", action: { type: "url", url: `https://mulebuy.com?id=${adminId}&money=${amount}` } },
+                    { type: "button", label: "APP 去支付", style: "primary", id: "TO", action: { type: "url", url: `mulebuy://?id=${adminId}&money=${amount}` } },
                     { type: "button", label: "← Back", style: "secondary", id: "back_to_amounts", action: { type: "submit" } },
                 ],
             },
