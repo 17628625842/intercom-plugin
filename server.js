@@ -93,7 +93,6 @@ app.post("/intercom/submit", (req, res) => {
     })
 })
 
-// ==================== 用户端卡片初始化 (Initialize) ====================
 app.post("/canvas/user/initialize", (req, res) => {
     const conversationId = extractConversationId(req)
     console.log(`🎯 Canvas 用户端 - 对话 ID: ${conversationId}`)
@@ -145,7 +144,7 @@ app.post("/canvas/user/submit", (req, res) => {
         canvas: {
             content: {
                 components: [
-                    { type: "button", label: "去支付", style: "primary", id: "TO", action: { type: "url", url: `https://mulebuy.com?id=${adminId}&money=${amount}` } },
+                    // { type: "button", label: "去支付", style: "primary", id: "TO", action: { type: "url", url: `https://mulebuy.com?id=${adminId}&money=${amount}` } },
                     { type: "button", label: "APP 去支付", style: "primary", id: "TO_app", action: { type: "url", url: `mulebuy://?id=${adminId}&money=${amount}` } },
                     { type: "button", label: "← Back", style: "secondary", id: "back_to_amounts", action: { type: "submit" } },
                 ],
