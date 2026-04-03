@@ -130,10 +130,8 @@ app.post("/canvas/user/submit", (req, res) => {
                     components: [
                         { type: "text", text: `💝 Thank `, style: "header" },
                         { type: "text", text: "Your support means a lot ✨", style: "muted" },
-                        { type: "button", label: "💵 $1", style: "primary", id: "tip_1", action: { type: "submit" } },
                         { type: "button", label: "💵 $5", style: "primary", id: "tip_5", action: { type: "submit" } },
                         { type: "button", label: "💵 $10", style: "primary", id: "tip_10", action: { type: "submit" } },
-                        { type: "button", label: "💵 $20", style: "primary", id: "tip_20", action: { type: "submit" } },
                         { type: "button", label: "✨ Custom Amount", style: "secondary", id: "tip_custom", action: { type: "submit" } },
                     ],
                 },
