@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000
 app.use(cors())
 app.use(express.json())
 
-app.post("/api/intercom/configure", (req, res) => {
+app.post("/intercom/initialize", (req, res) => {
     console.log("[Configure] Request received")
     console.log("Admin:", req.body.admin?.name)
 
@@ -44,8 +44,7 @@ app.post("/api/intercom/configure", (req, res) => {
     res.json(response)
 })
 
-// ==================== 配置提交 (Configure Submit) ====================
-app.post("/api/intercom/configure/submit", (req, res) => {
+app.post("/intercom/submit", (req, res) => {
     console.log("[Configure Submit] 准备插入卡片")
 
     const adminId = req.body.admin?.id || "unknown"
@@ -88,18 +87,10 @@ app.post("/api/intercom/configure/submit", (req, res) => {
 })
 
 // ==================== 用户端卡片初始化 (Initialize) ====================
-app.post("/api/intercom/initialize", (req, res) => {
-    console.log("[Initialize] Request received")
-    // console.log("Card creation options:", JSON.stringify(req.body.card_creation_options, null, 2))
-
-    const adminId = req.body.card_creation_options?.admin_id || "unknown"
+app.post("/canvas/user/initialize", (req, res) => {
     const adminName = req.body.card_creation_options?.admin_name || "客服"
 
-    // ⚠️ 注意：URL 中的参数需要正确编码
-    const tip5Url = `https://mulebuy.com?id=${encodeURIComponent(adminId)}&money=5`
-    const tip10Url = `https://mulebuy.com?id=${encodeURIComponent(adminId)}&money=10`
-
-    const response = {
+    res.json({
         canvas: {
             content: {
                 components: [
@@ -121,8 +112,7 @@ app.post("/api/intercom/initialize", (req, res) => {
                                 label: "$5",
                                 style: "primary",
                                 action: {
-                                    type: "url",
-                                    url: tip5Url,
+                                    type: "submit",
                                 },
                             },
                             {
@@ -131,8 +121,7 @@ app.post("/api/intercom/initialize", (req, res) => {
                                 label: "$10",
                                 style: "primary",
                                 action: {
-                                    type: "url",
-                                    url: tip10Url,
+                                    type: "submit",
                                 },
                             },
                         ],
@@ -140,9 +129,33 @@ app.post("/api/intercom/initialize", (req, res) => {
                 ],
             },
         },
-    }
+    })
+})
 
-    res.json(response)
+// 用户点击按钮后的处理
+app.post("/canvas/user/submit", (req, res) => {
+    const { component_id, card_creation_options } = req.body
+
+    const adminId = card_creation_options?.admin_id || "unknown"
+    const amount = component_id === "tip_5" ? 5 : 10
+
+    // 返回跳转响应
+    res.json({
+        canvas: {
+            content: {
+                components: [
+                    {
+                        type: "text",
+                        text: "正在跳转到支付页面...",
+                    },
+                ],
+            },
+            action: {
+                type: "url",
+                url: `https://mulebuy.com?id=${adminId}&money=${amount}`,
+            },
+        },
+    })
 })
 
 app.listen(PORT, () => {
