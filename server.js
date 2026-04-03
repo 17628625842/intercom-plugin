@@ -46,20 +46,19 @@ app.post("/api/intercom/configure", (req, res) => {
 
 // ==================== 配置提交 (Configure Submit) ====================
 app.post("/api/intercom/configure/submit", (req, res) => {
-    console.log("[Configure Submit] Request received")
-    console.log("Component ID:", req.body.component_id)
+    console.log("[Configure Submit] 准备插入卡片")
 
-    // 返回 results 对象，这些会作为 card_creation_options 传给 initialize
-    const response = {
-        results: {
-            admin_id: req.body.admin?.id || "unknown",
-            admin_name: req.body.admin?.name || "客服",
-            configured_at: new Date().toISOString(),
+    const adminId = req.body.admin?.id || "unknown"
+    const adminName = req.body.admin?.name || "客服"
+
+    // 关键：返回 card_creation_options 而不是 results
+    // 这样 Intercom 才会调用 initialize_url 来渲染用户端卡片
+    res.json({
+        card_creation_options: {
+            admin_id: adminId,
+            admin_name: adminName,
         },
-    }
-
-    console.log("[Configure Submit] Response:", JSON.stringify(response, null, 2))
-    res.json(response)
+    })
 })
 
 // ==================== 用户端卡片初始化 (Initialize) ====================
@@ -112,30 +111,12 @@ app.post("/api/intercom/initialize", (req, res) => {
                             },
                         ],
                     },
-                    {
-                        type: "text",
-                        text: "点击按钮后将跳转到支付页面完成打赏 🙏",
-                        style: "muted",
-                    },
                 ],
             },
         },
     }
 
-    console.log("[Initialize] Response:", JSON.stringify(response, null, 2))
     res.json(response)
-})
-
-// ==================== 健康检查 ====================
-app.get("/health", (req, res) => {
-    res.json({
-        status: "healthy",
-        endpoints: {
-            configure: "/api/intercom/configure",
-            configure_submit: "/api/intercom/configure/submit",
-            initialize: "/api/intercom/initialize",
-        },
-    })
 })
 
 app.listen(PORT, () => {
