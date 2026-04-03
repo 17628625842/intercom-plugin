@@ -119,27 +119,39 @@ app.post("/canvas/user/initialize", (req, res) => {
 // 用户点击按钮后的处理
 app.post("/canvas/user/submit", (req, res) => {
     const { component_id, card_creation_options, context } = req.body
-
     const adminId = card_creation_options?.admin_id || "unknown"
     const amount = component_id === "tip_5" ? 5 : 10
-    const conversationId = context?.conversation_id || 'unknown';
-    
-    console.log(`🎯 用户操作: ${component_id}, 对话: ${conversationId}`);
+    const conversationId = context?.conversation_id || "unknown"
 
-    // 返回跳转响应
+    console.log(`🎯 用户操作: ${component_id}, 对话: ${conversationId}`)
+
+    if (component_id == "back_to_amounts") {
+        res.json({
+            canvas: {
+                content: {
+                    components: [
+                        { type: "text", text: `💝 Thank `, style: "header" },
+                        { type: "text", text: "Your support means a lot ✨", style: "muted" },
+                        { type: "button", label: "💵 $1", style: "primary", id: "tip_1", action: { type: "submit" } },
+                        { type: "button", label: "💵 $5", style: "primary", id: "tip_5", action: { type: "submit" } },
+                        { type: "button", label: "💵 $10", style: "primary", id: "tip_10", action: { type: "submit" } },
+                        { type: "button", label: "💵 $20", style: "primary", id: "tip_20", action: { type: "submit" } },
+                        { type: "button", label: "✨ Custom Amount", style: "secondary", id: "tip_custom", action: { type: "submit" } },
+                    ],
+                },
+                metadata: { conversationId },
+            },
+        })
+        return
+    }
+
     res.json({
         canvas: {
             content: {
                 components: [
-                    {
-                        type: "text",
-                        text: "正在跳转到支付页面...",
-                    },
+                    { type: "button", label: "去支付", style: "primary", id: "TO", action: { type: "url", url: `https://mulebuy.com?id=${adminId}&money=${amount}` } },
+                    { type: "button", label: "← Back", style: "secondary", id: "back_to_amounts", action: { type: "submit" } },
                 ],
-            },
-            action: {
-                type: "url",
-                url: `https://mulebuy.com?id=${adminId}&money=${amount}`,
             },
         },
     })
