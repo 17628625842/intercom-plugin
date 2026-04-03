@@ -104,10 +104,8 @@ app.post("/canvas/user/initialize", (req, res) => {
                 components: [
                     { type: "text", text: `💝 Thank `, style: "header" },
                     { type: "text", text: "Your support means a lot ✨", style: "muted" },
-                    { type: "button", label: "💵 $1", style: "primary", id: "tip_1", action: { type: "submit" } },
                     { type: "button", label: "💵 $5", style: "primary", id: "tip_5", action: { type: "submit" } },
                     { type: "button", label: "💵 $10", style: "primary", id: "tip_10", action: { type: "submit" } },
-                    { type: "button", label: "💵 $20", style: "primary", id: "tip_20", action: { type: "submit" } },
                     { type: "button", label: "✨ Custom Amount", style: "secondary", id: "tip_custom", action: { type: "submit" } },
                 ],
             },
@@ -150,7 +148,7 @@ app.post("/canvas/user/submit", (req, res) => {
             content: {
                 components: [
                     { type: "button", label: "去支付", style: "primary", id: "TO", action: { type: "url", url: `https://mulebuy.com?id=${adminId}&money=${amount}` } },
-                    { type: "button", label: "APP 去支付", style: "primary", id: "TO", action: { type: "url", url: `mulebuy://?id=${adminId}&money=${amount}` } },
+                    { type: "button", label: "APP 去支付", style: "primary", id: "TO_app", action: { type: "url", url: `mulebuy://?id=${adminId}&money=${amount}` } },
                     { type: "button", label: "← Back", style: "secondary", id: "back_to_amounts", action: { type: "submit" } },
                 ],
             },
