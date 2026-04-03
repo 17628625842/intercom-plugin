@@ -14,8 +14,8 @@ router.get("/open/app", (req, res) => {
           <meta charset="UTF-8">
         </head>
         <body>
-            <script>
-            window.open('mulebuy://?id=123')
+        <script>
+            window.location.href = 'mulebuy://?id=123';
         </script>
         </body>
         </html>
