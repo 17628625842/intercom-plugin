@@ -1,150 +1,184 @@
-require("dotenv").config()
-const express = require("express")
-const cors = require("cors")
+/**
+ * 客服打赏系统 - 主入口文件
+ * 
+ * 重构版本：模块化架构
+ * 原始版本的所有功能保持不变
+ */
 
-const app = express()
-const PORT = process.env.PORT || 3000
+require('dotenv').config();
 
-app.use(cors())
-app.use(express.json())
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const cookieParser = require('cookie-parser'); // 用于解析 JWT Cookie
+const { config } = require('./src/config');
 
-app.post("/api/intercom/configure", (req, res) => {
-    console.log("[Configure] Request received")
-    console.log("Admin:", req.body.admin?.name)
+// 导入路由模块
+const {
+    authRoutes,
+    paymentRoutes,
+    canvasRoutes,
+    apiRoutes,
+    adminRoutes
+} = require('./src/routes');
 
-    // ⚠️ 注意：每个按钮都必须包含 action 字段！
-    const response = {
-        canvas: {
-            content: {
-                components: [
-                    {
-                        type: "text",
-                        text: "💰 打赏插件",
-                        style: "header",
-                    },
-                    {
-                        type: "text",
-                        text: "点击下方按钮，向用户发送打赏卡片",
-                    },
-                    {
-                        type: "button",
-                        id: "send_tip_card",
-                        label: "📤 发送打赏卡片",
-                        style: "primary",
-                        action: {
-                            type: "submit", // ✅ 必须包含
-                        },
-                    },
-                ],
-            },
-        },
+// 创建 Express 应用
+const app = express();
+
+// 信任反向代理 (解决 Vercel/Nginx 等环境下的真实 IP 获取问题)
+// 这也是解决 express-rate-limit 报错 "ERR_ERL_UNEXPECTED_X_FORWARDED_FOR" 的关键
+app.set('trust proxy', 1);
+
+// 中间件配置
+app.use(cors({
+    origin: true,
+    credentials: true
+}));
+
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
+
+// Cookie 解析器（用于 JWT Token）
+app.use(cookieParser());
+
+// 速率限制配置
+const rateLimit = require('express-rate-limit');
+
+// 登录接口速率限制（严格：每15分钟最多5次失败尝试）
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15分钟
+    max: 5, // 最多5次请求
+    message: { error: '登录尝试过于频繁，请15分钟后再试' },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: true // 成功的请求不计入限制
+});
+
+// 通用 API 速率限制（宽松：每分钟100次）
+const apiLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1分钟
+    max: 100, // 最多100次请求
+    message: { error: '请求过于频繁，请稍后再试' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
+// 为登录接口应用严格限制
+app.post('/login', loginLimiter);
+
+// 为 API 接口应用通用限制
+app.use('/api', apiLimiter);
+app.use('/create-payment', apiLimiter);
+
+// 静态文件服务 (favicon 等)
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'public')));
+
+// 日志工具
+const logger = require('./src/utils/logger');
+
+// 请求日志中间件（生产环境自动简化）
+app.use((req, res, next) => {
+    logger.request(req.method, req.path);
+    next();
+});
+
+// 注册路由
+app.use('/', authRoutes);      // 认证路由 (登录/登出)
+app.use('/', paymentRoutes);   // 支付路由 (打赏页面、PayPal支付)
+app.use('/', canvasRoutes);    // Canvas 路由 (Intercom Canvas 应用)
+app.use('/', apiRoutes);       // API 路由 (汇率等)
+app.use('/', adminRoutes);     // 管理后台路由 (必须放在最后，因为包含 '/' 根路由)
+
+// 健康检查（含数据库验证）
+const { testConnection } = require('./src/services/database');
+
+app.get('/health', async (req, res) => {
+    const health = {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        version: '2.0.0-modular',
+        services: {
+            server: 'healthy',
+            database: 'unknown'
+        }
+    };
+
+    try {
+        // 检查数据库连接
+        const dbConnected = await testConnection();
+        health.services.database = dbConnected ? 'healthy' : 'unhealthy';
+
+        // 如果数据库不健康，整体状态也不健康
+        if (!dbConnected) {
+            health.status = 'degraded';
+        }
+    } catch (error) {
+        health.services.database = 'error';
+        health.status = 'unhealthy';
+        health.error = process.env.NODE_ENV === 'production'
+            ? 'Database connection failed'
+            : error.message;
     }
 
-    console.log("[Configure] Response:", JSON.stringify(response, null, 2))
-    res.json(response)
-})
+    // 根据状态返回对应的 HTTP 状态码
+    const statusCode = health.status === 'ok' ? 200 : 503;
+    res.status(statusCode).json(health);
+});
 
-// ==================== 配置提交 (Configure Submit) ====================
-app.post("/api/intercom/configure/submit", (req, res) => {
-    console.log("[Configure Submit] 准备插入卡片")
+// 404 处理
+app.use((req, res) => {
+    console.log(`⚠️ 404 未找到: ${req.method} ${req.path}`);
+    res.status(404).json({
+        error: 'Not Found',
+        path: req.path
+    });
+});
 
-    const adminId = req.body.admin?.id || "unknown"
-    const adminName = req.body.admin?.name || "客服"
+// 错误处理中间件
+app.use((err, req, res, next) => {
+    console.error('❌ 服务器错误:', err);
+    res.status(500).json({
+        error: 'Internal Server Error',
+        message: err.message
+    });
+});
 
-    // 关键：返回 card_creation_options 而不是 results
-    // 这样 Intercom 才会调用 initialize_url 来渲染用户端卡片
-    res.json({
-        canvas: {
-            content: {
-                components: [
-                    { type: "text", text: "✅ 已发送", style: "header" },
-                    { type: "divider" },
-                    {
-                        type: "text",
-                        text: "💰 打赏插件",
-                        style: "header",
-                    },
-                    {
-                        type: "text",
-                        text: "点击下方按钮，向用户发送打赏卡片",
-                    },
-                    {
-                        type: "button",
-                        id: "send_tip_card",
-                        label: "📤 发送打赏卡片",
-                        style: "primary",
-                        action: {
-                            type: "submit", // ✅ 必须包含
-                        },
-                    },
-                ],
-            },
-        },
-        card_creation_options: {
-            admin_id: adminId,
-            admin_name: adminName,
-        },
-    })
-})
-
-// ==================== 用户端卡片初始化 (Initialize) ====================
-app.post("/api/intercom/initialize", (req, res) => {
-    console.log("[Initialize] Request received")
-    // console.log("Card creation options:", JSON.stringify(req.body.card_creation_options, null, 2))
-
-    const adminId = req.body.card_creation_options?.admin_id || "unknown"
-    const adminName = req.body.card_creation_options?.admin_name || "客服"
-
-    // ⚠️ 注意：URL 中的参数需要正确编码
-    const tip5Url = `https://mulebuy.com?id=${encodeURIComponent(adminId)}&money=5`
-    const tip10Url = `https://mulebuy.com?id=${encodeURIComponent(adminId)}&money=10`
-
-    const response = {
-        canvas: {
-            content: {
-                components: [
-                    {
-                        type: "text",
-                        text: `🎁 支持一下 ${adminName}`,
-                        style: "header",
-                    },
-                    {
-                        type: "text",
-                        text: "感谢您的支持！请选择打赏金额：",
-                    },
-                    {
-                        type: "row",
-                        components: [
-                            {
-                                type: "button",
-                                id: "tip_5",
-                                label: "$5",
-                                style: "primary",
-                                action: {
-                                    type: "url",
-                                    url: tip5Url,
-                                },
-                            },
-                            {
-                                type: "button",
-                                id: "tip_10",
-                                label: "$10",
-                                style: "primary",
-                                action: {
-                                    type: "url",
-                                    url: tip10Url,
-                                },
-                            },
-                        ],
-                    },
-                ],
-            },
-        },
-    }
-
-    res.json(response)
-})
+// 启动服务器
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
-})
+    console.log('');
+    console.log('🎉 ========================================');
+    console.log('🎉   客服打赏系统 v2.0 (模块化版本)');
+    console.log('🎉 ========================================');
+    console.log(`🚀 服务器运行在: http://localhost:${PORT}`);
+    console.log(`📊 管理后台: http://localhost:${PORT}/`);
+    console.log(`💰 PayPal 模式: ${config.paypal.mode}`);
+    console.log(`🔗 Base URL: ${config.baseUrl}`);
+    console.log('');
+    console.log('📦 已加载的模块:');
+    console.log('   ├── config/       - 配置模块');
+    console.log('   ├── utils/        - 工具函数');
+    console.log('   │   ├── auth      - 认证中间件');
+    console.log('   │   ├── currency  - 货币工具');
+    console.log('   │   └── intercom  - Intercom API');
+    console.log('   ├── services/     - 业务服务');
+    console.log('   │   ├── paypal    - PayPal 支付');
+    console.log('   │   ├── database  - 数据库操作');
+    console.log('   │   └── excel     - Excel 导出');
+    console.log('   ├── views/        - 视图模板');
+    console.log('   │   ├── login     - 登录页面');
+    console.log('   │   ├── tip-page  - 打赏页面');
+    console.log('   │   ├── admin     - 管理后台');
+    console.log('   │   └── canvas    - Intercom Canvas');
+    console.log('   └── routes/       - 路由处理');
+    console.log('       ├── auth      - 认证路由');
+    console.log('       ├── payment   - 支付路由');
+    console.log('       ├── canvas    - Canvas 路由');
+    console.log('       ├── admin     - 管理路由');
+    console.log('       └── api       - API 路由');
+    console.log('');
+});
+
+module.exports = app;
