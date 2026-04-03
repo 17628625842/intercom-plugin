@@ -54,6 +54,32 @@ app.post("/api/intercom/configure/submit", (req, res) => {
     // 关键：返回 card_creation_options 而不是 results
     // 这样 Intercom 才会调用 initialize_url 来渲染用户端卡片
     res.json({
+        canvas: {
+            content: {
+                components: [
+                    { type: "text", text: "✅ 已发送", style: "header" },
+                    { type: "divider" },
+                    {
+                        type: "text",
+                        text: "💰 打赏插件",
+                        style: "header",
+                    },
+                    {
+                        type: "text",
+                        text: "点击下方按钮，向用户发送打赏卡片",
+                    },
+                    {
+                        type: "button",
+                        id: "send_tip_card",
+                        label: "📤 发送打赏卡片",
+                        style: "primary",
+                        action: {
+                            type: "submit", // ✅ 必须包含
+                        },
+                    },
+                ],
+            },
+        },
         card_creation_options: {
             admin_id: adminId,
             admin_name: adminName,
