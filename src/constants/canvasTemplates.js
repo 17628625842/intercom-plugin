@@ -109,7 +109,7 @@ const userPaymentCanvas = (adminId, amount, conversationId) => ({
                     action: {
                         type: "url",
                         // url: `https://mulebuy.com?id=${adminId}&money=${amount}`,
-                        url: `https://m.mulebuy.com/app/`,
+                        url: `https://intercom-plugin.onrender.com/open/app?`,
                     },
                 },
                 // {
