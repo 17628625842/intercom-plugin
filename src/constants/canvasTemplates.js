@@ -109,19 +109,19 @@ const userPaymentCanvas = (adminId, amount, conversationId) => ({
                     action: {
                         type: "url",
                         // url: `https://mulebuy.com?id=${adminId}&money=${amount}`,
-                        url: `https://intercom-plugin.onrender.com/open/app?`,
+                        url: `https://intercom-plugin.onrender.com/open/app`,
                     },
                 },
-                // {
-                //     type: "button",
-                //     label: "APP 去支付",
-                //     style: "primary",
-                //     id: "TO_app",
-                //     action: {
-                //         type: "url",
-                //         url: `mulebuy://?id=${adminId}&money=${amount}`,
-                //     },
-                // },
+                {
+                    type: "button",
+                    label: "APP 去支付",
+                    style: "primary",
+                    id: "TO_app",
+                    action: {
+                        type: "url",
+                        url: `m.mulebuy.com/app/?id=${adminId}&money=${amount}`,
+                    },
+                },
                 {
                     type: "button",
                     label: "← Back",
