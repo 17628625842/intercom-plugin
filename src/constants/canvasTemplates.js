@@ -119,7 +119,7 @@ const userPaymentCanvas = (adminId, amount, conversationId) => ({
                     id: "TO_app",
                     action: {
                         type: "url",
-                        url: `m.mulebuy.com/app/?id=${adminId}&money=${amount}`,
+                        url: `https://m.mulebuy.com/app/?id=${adminId}&money=${amount}`,
                     },
                 },
                 {
