@@ -1,11 +1,13 @@
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
 const routes = require('./routes');
 
 const app = express();
 
 // 中间件配置
 app.use(cors());
+app.use(compression());
 app.use(express.json());
 
 // 请求日志中间件
