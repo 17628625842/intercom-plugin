@@ -1,6 +1,7 @@
-const { extractConversationId, getAmountFromComponentId, logWithPrefix } = require("../utils/helpers")
+const { extractConversationId, getAmountFromComponentId, logWithPrefix, generateSSESignature } = require("../utils/helpers")
 const { userMainCanvas, userPaymentCanvas } = require("../constants/canvasTemplates")
 const conversationService = require("../services/conversationService")
+const sseController = require("./sseController")
 
 /**
  * 用户端初始化 - 显示打赏界面
@@ -22,16 +23,21 @@ const initialize = (req, res) => {
  * 用户端提交 - 处理打赏按钮点击
  */
 const submit = (req, res) => {
-    const { component_id, card_creation_options, context } = req.body
+    const { component_id, card_creation_options, context, input_values, canvas } = req.body
     const adminId = card_creation_options?.admin_id || "unknown"
     const conversationId = context?.conversation_id || extractConversationId(req) || "unknown"
+    
+    // 从 Canvas 之前的元数据中提取金额（如果存在）
+    const previousAmount = canvas?.metadata?.amount
 
-    logWithPrefix("🎯", `用户操作: ${component_id}, 对话: ${conversationId}`)
+    logWithPrefix("🎯", `用户操作: ${component_id}, 对话: ${conversationId}`, { input_values, previousAmount })
 
     // 记录操作
     conversationService.logConversationAction(conversationId, "user_submit", {
         componentId: component_id,
         adminId,
+        input_values,
+        previousAmount
     })
 
     // 处理返回金额选择界面
@@ -42,16 +48,45 @@ const submit = (req, res) => {
     }
 
     // 获取打赏金额
-    const amount = getAmountFromComponentId(component_id)
+    let amount = getAmountFromComponentId(component_id)
 
     // 处理自定义金额
     if (component_id === "tip_custom") {
-        // 可以在这里处理自定义金额逻辑
-        console.log("自定义金额功能待实现")
+        const customAmount = input_values?.custom_amount_input
+        if (customAmount) {
+            amount = parseFloat(customAmount)
+            logWithPrefix("💰", `自定义金额: ${amount}`)
+        }
+    }
+
+    // 如果当前操作不是选择金额，则使用之前的金额
+    if (!amount && previousAmount) {
+        amount = previousAmount
+    }
+
+    // 处理支付按钮
+    if (component_id === "go_to_pay") {
+        logWithPrefix("💳", `用户点击去支付, 对话: ${conversationId}, 金额: ${amount}`)
+        
+        // 发送 SSE 消息通知用户端支付已启动
+        sseController.sendMessage(conversationId, {
+            event: "payment_started",
+            message: "Payment process initiated",
+            amount: amount,
+            timestamp: new Date().toISOString()
+        })
+    }
+
+    // 生成 SSE 连接信息
+    const signature = generateSSESignature(conversationId, sseController.SSE_SECRET)
+    const sseInfo = {
+        endpoint: "/api/sse/connect",
+        conversationId,
+        signature
     }
 
     // 返回支付跳转界面
-    const response = userPaymentCanvas(adminId, amount || 0, conversationId)
+    const response = userPaymentCanvas(adminId, amount || 0, conversationId, sseInfo)
     res.json(response)
 }
 

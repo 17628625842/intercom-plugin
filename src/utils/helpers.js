@@ -59,8 +59,21 @@ function extractConversationId(req) {
     }
   }
   
-  module.exports = {
+  const crypto = require("crypto")
+
+/**
+ * 生成 SSE 签名
+ * @param {string} conversationId 对话 ID
+ * @param {string} secret 密钥
+ * @returns {string} 签名
+ */
+function generateSSESignature(conversationId, secret) {
+    return crypto.createHmac("sha256", secret).update(conversationId).digest("hex")
+}
+
+module.exports = {
     extractConversationId,
     getAmountFromComponentId,
     logWithPrefix,
-  };
+    generateSSESignature,
+};

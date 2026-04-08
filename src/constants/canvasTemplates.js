@@ -83,9 +83,16 @@ const userMainCanvas = (conversationId) => ({
                     id: "tip_10",
                     action: { type: "submit" },
                 },
+                { type: "divider" },
+                {
+                    type: "input",
+                    id: "custom_amount_input",
+                    label: "Custom Amount ($)",
+                    placeholder: "Enter amount",
+                },
                 {
                     type: "button",
-                    label: "✨ Custom Amount",
+                    label: "✨ Tip Custom Amount",
                     style: "secondary",
                     id: "tip_custom",
                     action: { type: "submit" },
@@ -97,30 +104,22 @@ const userMainCanvas = (conversationId) => ({
 })
 
 // 用户端支付跳转界面模板
-const userPaymentCanvas = (adminId, amount, conversationId) => ({
+const userPaymentCanvas = (adminId, amount, conversationId, sseInfo = null) => ({
     canvas: {
         content: {
             components: [
                 {
-                    type: "button",
-                    label: "去支付",
-                    style: "primary",
-                    id: "TO",
-                    action: {
-                        type: "url",
-                        // url: `https://mulebuy.com?id=${adminId}&money=${amount}`,
-                        url: `https://intercom-plugin.onrender.com/open/app`,
-                    },
+                    type: "text",
+                    text: `💰 打赏金额: $${amount}`,
+                    style: "header",
+                    align: "center",
                 },
                 {
                     type: "button",
-                    label: "APP 去支付",
+                    label: "去支付",
                     style: "primary",
-                    id: "TO_app",
-                    action: {
-                        type: "url",
-                        url: `https://m.mulebuy.com/app/?id=${adminId}&money=${amount}`,
-                    },
+                    id: "go_to_pay",
+                    action: { type: "submit" },
                 },
                 {
                     type: "button",
@@ -131,7 +130,7 @@ const userPaymentCanvas = (adminId, amount, conversationId) => ({
                 },
             ],
         },
-        metadata: { conversationId },
+        metadata: { conversationId, sseInfo, amount },
     },
 })
 
