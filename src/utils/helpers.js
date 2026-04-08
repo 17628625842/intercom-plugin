@@ -63,12 +63,14 @@ function extractConversationId(req) {
 
 /**
  * 生成 SSE 签名
- * @param {string} conversationId 对话 ID
+ * @param {string|number} conversationId 对话 ID
  * @param {string} secret 密钥
  * @returns {string} 签名
  */
 function generateSSESignature(conversationId, secret) {
-    return crypto.createHmac("sha256", secret).update(conversationId).digest("hex")
+    // 确保 conversationId 是字符串，避免 TypeError [ERR_INVALID_ARG_TYPE]
+    const idStr = String(conversationId)
+    return crypto.createHmac("sha256", secret).update(idStr).digest("hex")
 }
 
 module.exports = {
