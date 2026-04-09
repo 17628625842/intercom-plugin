@@ -8,11 +8,19 @@ const sseController = require("./sseController")
  */
 const initialize = (req, res) => {
     const conversationId = extractConversationId(req)
-    logWithPrefix("🎯", `Canvas 用户端 - 对话 ID: ${conversationId}`)
+    const userId = req.body.user?.external_id || req.body.user?.user_id
+    
+    logWithPrefix("🎯", `Canvas 用户端 - 对话 ID: ${conversationId}, 用户 ID: ${userId}`)
+
+    // 建立 SSE 映射关系
+    if (conversationId && userId) {
+        sseController.registerMapping(conversationId, userId)
+    }
 
     // 记录操作
     conversationService.logConversationAction(conversationId, "user_initialize", {
         cardCreationOptions: req.body.card_creation_options,
+        userId
     })
 
     const response = userMainCanvas(conversationId)
@@ -26,7 +34,13 @@ const submit = (req, res) => {
     const { component_id, card_creation_options, context, input_values, canvas } = req.body
     const adminId = card_creation_options?.admin_id || "unknown"
     const conversationId = context?.conversation_id || extractConversationId(req) || "unknown"
+    const userId = req.body.user?.external_id || req.body.user?.user_id
     
+    // 建立 SSE 映射关系
+    if (conversationId && userId) {
+        sseController.registerMapping(conversationId, userId)
+    }
+
     // 从 Canvas 之前的元数据中提取金额（如果存在）
     const previousAmount = canvas?.metadata?.amount
 

@@ -2,11 +2,27 @@ const { logWithPrefix } = require("../utils/helpers")
 const crypto = require("crypto")
 
 // 存储所有的 SSE 连接
-// 格式: { conversationId: res }
+// 格式: { id: res } (id 可以是 userId 或 conversationId)
 const connections = new Map()
+
+// 存储 ID 映射
+// 格式: { conversationId: userId }
+const idMapping = new Map()
 
 // 这里的密钥应该在环境变量中
 const SSE_SECRET = process.env.SSE_SECRET || "Scwc9Y5o8ln0Yai6"
+
+/**
+ * 注册 ID 映射
+ * @param {string} conversationId 
+ * @param {string} userId 
+ */
+const registerMapping = (conversationId, userId) => {
+    if (conversationId && userId) {
+        idMapping.set(String(conversationId), String(userId))
+        logWithPrefix("🔗", `已关联对话 ${conversationId} 与用户 ${userId}`)
+    }
+}
 
 /**
  * 验证 SSE 签名
@@ -39,6 +55,11 @@ const connect = (req, res) => {
     if (!verifySignature(targetId, signature)) {
         logWithPrefix("❌", `SSE 签名验证失败: ${targetId}`)
         return res.status(401).json({ error: "Invalid signature" })
+    }
+
+    // 如果同时提供了两个 ID，则建立映射关系
+    if (conversationId && userId) {
+        registerMapping(conversationId, userId)
     }
 
     // 设置 SSE 响应头
@@ -74,18 +95,40 @@ const connect = (req, res) => {
 }
 
 /**
- * 向特定对话发送消息
- * @param {string|number} conversationId
+ * 向特定 ID 发送消息 (会自动尝试查找映射关系)
+ * @param {string|number} id 
  * @param {object} data
  */
-const sendMessage = (conversationId, data) => {
-    const idStr = String(conversationId)
-    const res = connections.get(idStr)
+const sendMessage = (id, data) => {
+    const idStr = String(id)
+    
+    // 1. 直接尝试查找连接
+    let res = connections.get(idStr)
+    
+    // 2. 如果没找到，且该 ID 可能是 conversationId，则尝试查找对应的 userId
+    if (!res && idMapping.has(idStr)) {
+        const mappedUserId = idMapping.get(idStr)
+        logWithPrefix("🔗", `查找映射: ${idStr} -> ${mappedUserId}`)
+        res = connections.get(mappedUserId)
+    }
+    
+    // 3. 再次如果没找到，且该 ID 可能是 userId，则尝试反向查找 conversationId
+    if (!res) {
+        for (const [convId, uId] of idMapping.entries()) {
+            if (uId === idStr) {
+                logWithPrefix("🔗", `反向查找映射: ${idStr} -> ${convId}`)
+                res = connections.get(convId)
+                if (res) break
+            }
+        }
+    }
+
     if (res) {
         logWithPrefix("📤", `发送 SSE 消息到 ${idStr}`, data)
         res.write(`data: ${JSON.stringify(data)}\n\n`)
         return true
     }
+    
     logWithPrefix("⚠️", `未找到 SSE 连接: ${idStr}`)
     return false
 }
@@ -93,6 +136,7 @@ const sendMessage = (conversationId, data) => {
 module.exports = {
     connect,
     sendMessage,
+    registerMapping,
     verifySignature,
     SSE_SECRET,
 }
