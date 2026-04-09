@@ -10,14 +10,14 @@ const SSE_SECRET = process.env.SSE_SECRET || "Scwc9Y5o8ln0Yai6"
 
 /**
  * 验证 SSE 签名
- * @param {string|number} conversationId 对话 ID
+ * @param {string|number} id 用户 ID 或对话 ID
  * @param {string} signature 签名
  * @returns {boolean}
  */
-const verifySignature = (conversationId, signature) => {
+const verifySignature = (id, signature) => {
     if (!signature) return false
-    // 确保 conversationId 是字符串，避免 TypeError [ERR_INVALID_ARG_TYPE]
-    const idStr = String(conversationId)
+    // 确保 id 是字符串，避免 TypeError [ERR_INVALID_ARG_TYPE]
+    const idStr = String(id)
     const expectedSignature = crypto.createHmac("sha256", SSE_SECRET).update(idStr).digest("hex")
     return signature === expectedSignature
 }
@@ -26,15 +26,18 @@ const verifySignature = (conversationId, signature) => {
  * 建立 SSE 连接
  */
 const connect = (req, res) => {
-    const { conversationId, signature } = req.query
+    const { userId, conversationId, signature } = req.query
+    
+    // 优先使用 userId, 如果没有则使用 conversationId (用于向下兼容)
+    const targetId = userId || conversationId
 
-    if (!conversationId) {
-        return res.status(400).json({ error: "Missing conversationId" })
+    if (!targetId) {
+        return res.status(400).json({ error: "Missing userId or conversationId" })
     }
 
     // 签名校验
-    if (!verifySignature(conversationId, signature)) {
-        logWithPrefix("❌", `SSE 签名验证失败: ${conversationId}`)
+    if (!verifySignature(targetId, signature)) {
+        logWithPrefix("❌", `SSE 签名验证失败: ${targetId}`)
         return res.status(401).json({ error: "Invalid signature" })
     }
 
@@ -42,18 +45,23 @@ const connect = (req, res) => {
     res.setHeader("Content-Type", "text/event-stream")
     res.setHeader("Cache-Control", "no-cache")
     res.setHeader("Connection", "keep-alive")
+    res.setHeader("Access-Control-Allow-Origin", "*") // 允许跨域
 
-    const idStr = String(conversationId)
+    const idStr = String(targetId)
 
     // 存储连接
     connections.set(idStr, res)
     logWithPrefix("📡", `SSE 连接已建立: ${idStr}`)
 
     // 发送初始消息
-    res.write(`data: ${JSON.stringify({ status: "connected", conversationId: idStr })}\n\n`)
+    res.write(`data: ${JSON.stringify({ status: "connected", id: idStr })}\n\n`)
 
     // 定期发送心跳，防止连接超时
     const heartbeat = setInterval(() => {
+        if (res.writableEnded) {
+            clearInterval(heartbeat)
+            return
+        }
         res.write(": heartbeat\n\n")
     }, 30000)
 
