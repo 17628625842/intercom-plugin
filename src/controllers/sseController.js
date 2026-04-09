@@ -45,7 +45,7 @@ const connect = (req, res) => {
     const { userId, conversationId, signature } = req.query
     
     // 优先使用 userId, 如果没有则使用 conversationId (用于向下兼容)
-    const targetId = userId || conversationId
+    const targetId = userId
 
     if (!targetId) {
         return res.status(400).json({ error: "Missing userId or conversationId" })
@@ -129,7 +129,7 @@ const sendMessage = (id, data) => {
         return true
     }
     
-    logWithPrefix("⚠️", `未找到 SSE 连接: ${idStr}`)
+    logWithPrefix("⚠️", `未找到 SSE 连接: ${idStr}`, connections.keys())
     return false
 }
 
