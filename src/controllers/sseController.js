@@ -43,8 +43,9 @@ const connect = (req, res) => {
 
     // 设置 SSE 响应头
     res.setHeader("Content-Type", "text/event-stream")
-    res.setHeader("Cache-Control", "no-cache")
+    res.setHeader("Cache-Control", "no-cache, no-transform") // 禁止转换，防止某些代理压缩数据
     res.setHeader("Connection", "keep-alive")
+    res.setHeader("X-Accel-Buffering", "no") // 关键：禁用 Nginx/Render 等代理的缓存
     res.setHeader("Access-Control-Allow-Origin", "*") // 允许跨域
 
     const idStr = String(targetId)
@@ -53,8 +54,15 @@ const connect = (req, res) => {
     connections.set(idStr, res)
     logWithPrefix("📡", `SSE 连接已建立: ${idStr}`)
 
+    // 发送初始消息前，先发送一个较大的填充数据（Padding）
+    // 某些代理服务器（如 Render/Nginx）在收到前 1KB 数据前不会开始流式传输
+    res.write(`: ${" ".repeat(1024)}\n\n`)
+
     // 发送初始消息
     res.write(`data: ${JSON.stringify({ status: "connected", id: idStr })}\n\n`)
+
+    // 如果使用了 compression 中间件，强制刷新缓冲区
+    if (res.flush) res.flush();
 
     // 定期发送心跳，防止连接超时
     const heartbeat = setInterval(() => {
@@ -63,6 +71,7 @@ const connect = (req, res) => {
             return
         }
         res.write(": heartbeat\n\n")
+        if (res.flush) res.flush();
     }, 30000)
 
     // 连接断开处理
@@ -86,6 +95,7 @@ const sendMessage = (id, data) => {
     if (res) {
         logWithPrefix("📤", `发送 SSE 消息到 ${idStr}`, data)
         res.write(`data: ${JSON.stringify(data)}\n\n`)
+        if (res.flush) res.flush(); // 强制刷新缓冲区
         return true
     }
     
