@@ -62,14 +62,14 @@ function extractConversationId(req) {
   const crypto = require("crypto")
 
 /**
- * 生成 SSE 签名
- * @param {string|number} conversationId 对话 ID
+ * 生成 Socket 签名
+ * @param {string|number} userId 用户 ID
  * @param {string} secret 密钥
  * @returns {string} 签名
  */
-function generateSSESignature(conversationId, secret) {
-    // 确保 conversationId 是字符串，避免 TypeError [ERR_INVALID_ARG_TYPE]
-    const idStr = String(conversationId)
+function generateSocketSignature(userId, secret) {
+    // 确保 userId 是字符串，避免 TypeError [ERR_INVALID_ARG_TYPE]
+    const idStr = String(userId)
     return crypto.createHmac("sha256", secret).update(idStr).digest("hex")
 }
 
@@ -77,5 +77,5 @@ module.exports = {
     extractConversationId,
     getAmountFromComponentId,
     logWithPrefix,
-    generateSSESignature,
+    generateSocketSignature,
 };

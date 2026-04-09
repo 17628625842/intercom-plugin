@@ -1,18 +1,18 @@
-const { extractConversationId, getAmountFromComponentId, logWithPrefix, generateSSESignature } = require("../utils/helpers")
+const { extractConversationId, getAmountFromComponentId, logWithPrefix, generateSocketSignature } = require("../utils/helpers")
 const { userMainCanvas, userPaymentCanvas } = require("../constants/canvasTemplates")
 const conversationService = require("../services/conversationService")
-const sseController = require("./sseController")
+const socketController = require("./socketController")
 
 /**
  * 用户端初始化 - 显示打赏界面
  */
 const initialize = (req, res) => {
     const conversationId = extractConversationId(req)
-    const userId = req.body.user?.external_id || req.body.user?.user_id
+    logWithPrefix("🎯", `Canvas 用户端 - 对话 ID: ${conversationId}`)
+
     // 记录操作
     conversationService.logConversationAction(conversationId, "user_initialize", {
         cardCreationOptions: req.body.card_creation_options,
-        userId
     })
 
     const response = userMainCanvas(conversationId)
@@ -68,8 +68,8 @@ const submit = (req, res) => {
     if (component_id === "go_to_pay") {
         logWithPrefix("💳", `用户${userId}点击去支付, 对话: ${conversationId}, 金额: ${amount}`)
         
-        // 发送 SSE 消息通知用户端支付已启动
-        sseController.sendMessage(userId, {
+        // 发送 WebSocket 消息通知用户端支付已启动
+        socketController.sendMessage(userId, {
             event: "payment_started",
             message: "Payment process initiated",
             amount: amount,
@@ -77,16 +77,16 @@ const submit = (req, res) => {
         })
     }
 
-    // 生成 SSE 连接信息
-    const signature = generateSSESignature(conversationId, sseController.SSE_SECRET)
-    const sseInfo = {
-        endpoint: "/api/sse/connect",
-        conversationId,
+    // 生成连接信息
+    const signature = generateSocketSignature(userId, socketController.SOCKET_SECRET)
+    const socketInfo = {
+        endpoint: "/ws",
+        userId,
         signature
     }
 
     // 返回支付跳转界面
-    const response = userPaymentCanvas(adminId, amount || 0, conversationId, sseInfo)
+    const response = userPaymentCanvas(adminId, amount || 0, conversationId, socketInfo)
     res.json(response)
 }
 
