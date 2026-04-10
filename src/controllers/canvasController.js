@@ -39,7 +39,7 @@ const submit = (req, res) => {
     // 鲁棒性获取 userId
     const userId = user?.external_id || user?.user_id || customer?.user_id || customer?.id || "unknown"
     
-    logWithPrefix("🎯", `用户操作: ${component_id}, 客服: ${agentName} (${adminId}), 对话: ${conversationId}`)
+    logWithPrefix("🎯", `用户操作: ${component_id}, 客服: ${agentName} (${adminId}), 对话: ${conversationId}`, req.body)
 
     // 1. 处理视图切换
     if (component_id === "show_custom_input") {
