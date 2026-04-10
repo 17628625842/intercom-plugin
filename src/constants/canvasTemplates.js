@@ -131,8 +131,8 @@ const userCustomAmountCanvas = (conversationId) => ({
 })
 
 // 用户端支付跳转界面模板
-const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null) => ({
-    canvas: {
+const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, isProcessing = false) => {
+    const canvas = {
         content: {
             components: [
                 {
@@ -158,8 +158,19 @@ const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null) =
             ],
         },
         metadata: { conversationId, socketInfo, amount: String(amount) },
-    },
-})
+    }
+
+    if (isProcessing) {
+        canvas.content.components.push({
+            type: "text",
+            text: "For payment details, please visit the [Personal Center -> Account -> Balance] page to view them.",
+            style: "muted",
+            align: "center",
+        })
+    }
+
+    return { canvas }
+}
 
 module.exports = {
     adminMainCanvas,

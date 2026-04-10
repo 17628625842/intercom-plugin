@@ -18,11 +18,6 @@ const initialize = (req, res) => {
         agentName = extractAgentName(req);
     }
 
-    // 记录操作
-    conversationService.logConversationAction(conversationId, "user_initialize", {
-        cardCreationOptions: req.body.card_creation_options,
-    })
-
     const response = userMainCanvas(conversationId, agentName)
     res.json(response)
 }
@@ -39,13 +34,6 @@ const submit = (req, res) => {
     const userId = user?.external_id || user?.user_id || customer?.user_id || customer?.id || "unknown"
     
     logWithPrefix("🎯", `用户操作: ${component_id}, 对话: ${conversationId}`, req.body)
-
-    // 记录操作
-    conversationService.logConversationAction(conversationId, "user_submit", {
-        componentId: component_id,
-        adminId,
-        input_values,
-    })
 
     // 1. 处理视图切换
     if (component_id === "show_custom_input") {
@@ -107,7 +95,8 @@ const submit = (req, res) => {
                 event: "payment_started",
                 message: "Payment process initiated",
                 amount: currentAmount,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                adminId
             })
         } else {
             logWithPrefix("⚠️", "确认支付时金额为 0，可能 metadata 丢失")
@@ -117,7 +106,8 @@ const submit = (req, res) => {
         const signature = generateSocketSignature(userId, socketController.SOCKET_SECRET)
         const socketInfo = { endpoint: "/ws", userId, signature }
         
-        return res.json(userPaymentCanvas(adminId, currentAmount, conversationId, socketInfo))
+        // 返回支付跳转界面，设置 isProcessing 为 true，显示提示文本并隐藏按钮
+        return res.json(userPaymentCanvas(adminId, currentAmount, conversationId, socketInfo, true))
     }
 
     // 兜底返回主界面

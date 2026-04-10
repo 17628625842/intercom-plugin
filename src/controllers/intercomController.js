@@ -11,11 +11,6 @@ const initialize = (req, res) => {
 
     logWithPrefix("🔍", `客服端 - 对话 ID: ${conversationId}`)
 
-    // 记录操作
-    conversationService.logConversationAction(conversationId, "admin_initialize", {
-        admin: req.body.admin,
-    })
-
     const response = adminMainCanvas(conversationId)
     console.log("[Configure] Response:", JSON.stringify(response, null, 2))
     res.json(response)
@@ -31,13 +26,6 @@ const submit = (req, res) => {
     const adminName = extractAgentName(req)
 
     logWithPrefix("🔍", `客服操作: ${component_id}, 对话 ID: ${conversationId}`)
-
-    // 记录操作
-    conversationService.logConversationAction(conversationId, "admin_submit", {
-        componentId: component_id,
-        adminId,
-        adminName,
-    })
 
     // 生成卡片创建选项
     const cardCreationOptions = conversationService.generateCardCreationOptions(adminId, adminName, conversationId)
