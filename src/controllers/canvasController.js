@@ -23,7 +23,7 @@ const initialize = (req, res) => {
  * 用户端提交 - 处理打赏按钮点击
  */
 const submit = (req, res) => {
-    const { component_id, card_creation_options, context, input_values, canvas, customer, user } = req.body
+    const { component_id, card_creation_options, context, input_values, customer, user } = req.body
     const adminId = card_creation_options?.admin_id || "unknown"
     const conversationId = context?.conversation_id || extractConversationId(req) || "unknown"
     
@@ -87,9 +87,16 @@ const submit = (req, res) => {
     }
 
     // 4. 处理支付确认按钮点击 (Go to Pay)
-    if (component_id === "go_to_pay") {
-        // 如果点击去支付时没有实时选择金额，则使用 metadata 中的金额
-        const currentAmount = previousAmount
+    if (component_id === "go_to_pay" || component_id.startsWith("go_to_pay_")) {
+        // 优先从 ID 中提取金额，如果失败则回退到 metadata
+        let currentAmount = previousAmount
+        if (component_id.startsWith("go_to_pay_")) {
+            const extractedAmount = parseFloat(component_id.replace("go_to_pay_", ""))
+            if (!isNaN(extractedAmount)) {
+                currentAmount = extractedAmount
+                logWithPrefix("💰", `从按钮 ID 提取到金额: ${currentAmount}`)
+            }
+        }
         
         logWithPrefix("💳", `用户 ${userId} 点击去支付, 对话: ${conversationId}, 最终确认金额: ${currentAmount}`)
         

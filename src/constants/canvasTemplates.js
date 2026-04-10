@@ -157,7 +157,7 @@ const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null) =
                     type: "button",
                     label: "去支付",
                     style: "primary",
-                    id: "go_to_pay",
+                    id: `go_to_pay_${amount}`, // 将金额编码进 ID，防止 metadata 丢失
                     action: { type: "submit" },
                 },
                 {
@@ -169,7 +169,7 @@ const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null) =
                 },
             ],
         },
-        metadata: { conversationId, socketInfo, amount: String(amount) }, // 明确将 amount 转为字符串存入 metadata
+        metadata: { conversationId, socketInfo, amount: String(amount) },
     },
 })
 

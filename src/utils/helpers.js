@@ -7,6 +7,7 @@ function extractConversationId(req) {
     console.log('🔍 开始提取对话 ID...');
     
     const possibleIds = [
+      req.body.conversation_id,
       req.body.context?.conversation_id,
       req.body.conversation?.id,
       req.body.canvas?.metadata?.conversationId,
