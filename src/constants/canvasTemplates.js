@@ -140,30 +140,13 @@ const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, i
             align: "center",
         },
     ]
-
-    if (isProcessing) {
-        components.push({
-            type: "text",
-            text: "For payment details, please visit the [Personal Center -> Account -> Balance] page to view them.",
-            style: "muted",
-            align: "center",
-        })
-    } else {
-        components.push({
-            type: "button",
-            label: "Go to pay",
-            style: "primary",
-            id: `go_to_pay_${amount}:${adminId}`, // 将金额和 adminId 编码进 ID
-            action: { type: "submit" },
-        })
-        components.push({
-            type: "text",
-            text: "For payment details, please visit the [Personal Center -> Account -> Balance] page to view them.",
-            style: "muted",
-            align: "center",
-        })
-    }
-
+    components.push({
+        type: "button",
+        label: "Go to pay",
+        style: "primary",
+        id: `go_to_pay_${amount}:${adminId}`, // 将金额和 adminId 编码进 ID
+        action: { type: "submit" },
+    })
     components.push({
         type: "button",
         label: "← Back",
@@ -171,6 +154,15 @@ const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, i
         id: `back_to_amounts:${adminId}`,
         action: { type: "submit" },
     })
+
+    if (isProcessing) {
+        components.push({
+            type: "text",
+            text: "Check the payment result on the [Wallet] page.",
+            style: "muted",
+            align: "center",
+        })
+    }
 
     const canvas = {
         content: {

@@ -49,10 +49,22 @@ const submit = (req, res) => {
             logWithPrefix("🔗", `从组件 ID 提取到客服 ID: ${adminId}`);
         }
     }
-    
     if (!adminId) adminId = "unknown";
 
-    const agentName = card_creation_options?.admin_name || current_canvas?.metadata?.agentName || "Support Agent"
+    const agentName = "Support Agent"
+    const components = current_canvas?.content?.components || [];
+    for (const comp of components) {
+        if (comp.type === 'text' && comp.text) {
+            // 匹配 "💝 Thank Allen!" 或 "Thank Allen!" 格式
+            const match = comp.text.match(/Thank\s+(\w+)/i);
+            if (match && match[1]) {
+                agentName = match[1];
+                console.log(`✅ 从 canvas 文本中解析客服名字: ${agentName}`);
+                break;
+            }
+        }
+    }
+
     const conversationId = context?.conversation_id || current_canvas?.metadata?.conversationId || extractConversationId(req) || "unknown"
     
     // 鲁棒性获取 userId
@@ -128,7 +140,8 @@ const submit = (req, res) => {
                 message: "Payment process initiated",
                 amount: currentAmount,
                 timestamp: new Date().toISOString(),
-                adminId
+                adminId,
+                agentName,
             })
         } else {
             logWithPrefix("⚠️", "确认支付时金额为 0，可能 metadata 丢失")
