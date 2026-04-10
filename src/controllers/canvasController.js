@@ -30,20 +30,13 @@ const submit = (req, res) => {
     // 鲁棒性获取 userId
     const userId = user?.external_id || user?.user_id || customer?.user_id || customer?.id || "unknown"
     
-    // 从 Canvas 之前的元数据中提取金额，确保解析为数字
-    let previousAmount = 0
-    if (canvas?.metadata?.amount) {
-        previousAmount = parseFloat(canvas.metadata.amount)
-    }
-
-    logWithPrefix("🎯", `用户操作: ${component_id}, 对话: ${conversationId}, 现有金额: ${previousAmount}`, req.body)
+    logWithPrefix("🎯", `用户操作: ${component_id}, 对话: ${conversationId}`, req.body)
 
     // 记录操作
     conversationService.logConversationAction(conversationId, "user_submit", {
         componentId: component_id,
         adminId,
         input_values,
-        previousAmount
     })
 
     // 1. 处理视图切换
@@ -89,7 +82,7 @@ const submit = (req, res) => {
     // 4. 处理支付确认按钮点击 (Go to Pay)
     if (component_id === "go_to_pay" || component_id.startsWith("go_to_pay_")) {
         // 优先从 ID 中提取金额，如果失败则回退到 metadata
-        let currentAmount = previousAmount
+        let currentAmount = 0
         if (component_id.startsWith("go_to_pay_")) {
             const extractedAmount = parseFloat(component_id.replace("go_to_pay_", ""))
             if (!isNaN(extractedAmount)) {
