@@ -26,7 +26,7 @@ const submit = (req, res) => {
     const adminName = extractAgentName(req)
     // 获取输入框中的名字
     const inputAgentName = req.body.input_values?.agent_name_input?.trim();
-    logWithPrefix("🔍", `客服操作: ${component_id}, 对话 ID: ${conversationId}`)
+    logWithPrefix("🔍", `客服操作: ${component_id}, 对话 ID: ${conversationId}`, req.body)
 
     // 生成卡片创建选项
     const cardCreationOptions = conversationService.generateCardCreationOptions(adminId, inputAgentName || adminName, conversationId)
