@@ -23,14 +23,23 @@ const initialize = (req, res) => {
  * 用户端提交 - 处理打赏按钮点击
  */
 const submit = (req, res) => {
-    const { component_id, card_creation_options, context, input_values, canvas, customer } = req.body
+    const { component_id, card_creation_options, context, input_values, canvas, customer, user } = req.body
     const adminId = card_creation_options?.admin_id || "unknown"
     const conversationId = context?.conversation_id || extractConversationId(req) || "unknown"
-    const userId = customer.user_id
-    // 从 Canvas 之前的元数据中提取金额（如果存在）
-    const previousAmount = canvas?.metadata?.amount
+    
+    // 鲁棒性获取 userId
+    const userId = user?.external_id || user?.user_id || customer?.user_id || customer?.id || "unknown"
+    
+    // 从 Canvas 之前的元数据中提取金额，确保解析为数字
+    let previousAmount = 0
+    if (canvas?.metadata?.amount) {
+        previousAmount = parseFloat(canvas.metadata.amount)
+    }
 
-    logWithPrefix("🎯", `用户操作: ${component_id}, 对话: ${conversationId}`, req)
+    logWithPrefix("🎯", `用户操作: ${component_id}, 对话: ${conversationId}, 现有金额: ${previousAmount}`, {
+        userId,
+        metadata: canvas?.metadata
+    })
 
     // 记录操作
     conversationService.logConversationAction(conversationId, "user_submit", {
@@ -57,18 +66,18 @@ const submit = (req, res) => {
         const customAmount = input_values?.custom_amount_input
         if (customAmount) {
             amount = parseFloat(customAmount)
-            logWithPrefix("💰", `自定义金额: ${amount}`)
+            logWithPrefix("💰", `自定义金额输入: ${amount}`)
         }
         
         if (!amount || isNaN(amount) || amount <= 0) {
-            // 如果金额无效，可以返回错误提示或回到输入界面
-            // 这里简单处理，回到主界面
-            return res.json(userMainCanvas(conversationId))
+            logWithPrefix("⚠️", "无效的自定义金额，返回输入界面")
+            return res.json(userCustomAmountCanvas(conversationId))
         }
     }
 
-    // 3. 处理支付跳转逻辑
-    if (amount) {
+    // 3. 处理支付跳转逻辑 (如果当前选择了金额)
+    if (amount && !isNaN(amount)) {
+        logWithPrefix("💸", `准备支付跳转, 金额: ${amount}`)
         // 生成连接信息
         const signature = generateSocketSignature(userId, socketController.SOCKET_SECRET)
         const socketInfo = {
@@ -76,22 +85,28 @@ const submit = (req, res) => {
             userId,
             signature
         }
-        // 返回支付跳转界面
+        // 返回支付跳转界面，并将 amount 存入 metadata
         return res.json(userPaymentCanvas(adminId, amount, conversationId, socketInfo))
     }
 
     // 4. 处理支付确认按钮点击 (Go to Pay)
     if (component_id === "go_to_pay") {
-        const currentAmount = previousAmount || 0
-        logWithPrefix("💳", `用户${userId}点击去支付, 对话: ${conversationId}, 金额: ${currentAmount}`)
+        // 如果点击去支付时没有实时选择金额，则使用 metadata 中的金额
+        const currentAmount = previousAmount
         
-        // 发送 WebSocket 消息通知用户端支付已启动
-        socketController.sendMessage(userId, {
-            event: "payment_started",
-            message: "Payment process initiated",
-            amount: currentAmount,
-            timestamp: new Date().toISOString()
-        })
+        logWithPrefix("💳", `用户 ${userId} 点击去支付, 对话: ${conversationId}, 最终确认金额: ${currentAmount}`)
+        
+        if (currentAmount > 0) {
+            // 发送 WebSocket 消息通知用户端支付已启动
+            socketController.sendMessage(userId, {
+                event: "payment_started",
+                message: "Payment process initiated",
+                amount: currentAmount,
+                timestamp: new Date().toISOString()
+            })
+        } else {
+            logWithPrefix("⚠️", "确认支付时金额为 0，可能 metadata 丢失")
+        }
 
         // 重新生成签名信息保持连接有效性
         const signature = generateSocketSignature(userId, socketController.SOCKET_SECRET)
