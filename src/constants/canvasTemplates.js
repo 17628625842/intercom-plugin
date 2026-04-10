@@ -61,35 +61,35 @@ const userMainCanvas = (conversationId, agentName, adminId = "unknown") => ({
                     type: "button",
                     label: "💵 $1",
                     style: "secondary",
-                    id: "tip_1",
+                    id: `tip_1:${adminId}`,
                     action: { type: "submit" },
                 },
                 {
                     type: "button",
                     label: "💵 $5",
                     style: "secondary",
-                    id: "tip_5",
+                    id: `tip_5:${adminId}`,
                     action: { type: "submit" },
                 },
                 {
                     type: "button",
                     label: "💵 $10",
                     style: "secondary",
-                    id: "tip_10",
+                    id: `tip_10:${adminId}`,
                     action: { type: "submit" },
                 },
                 {
                     type: "button",
                     label: "💵 $20",
                     style: "secondary",
-                    id: "tip_20",
+                    id: `tip_20:${adminId}`,
                     action: { type: "submit" },
                 },
                 {
                     type: "button",
                     label: "✨ Custom Amount",
                     style: "secondary",
-                    id: "show_custom_input",
+                    id: `show_custom_input:${adminId}`,
                     action: { type: "submit" },
                 },
             ],
@@ -114,14 +114,14 @@ const userCustomAmountCanvas = (conversationId, adminId = "unknown", agentName =
                     type: "button",
                     label: "Confirm",
                     style: "primary",
-                    id: "tip_custom_submit",
+                    id: `tip_custom_submit:${adminId}`,
                     action: { type: "submit" },
                 },
                 {
                     type: "button",
                     label: "← Back",
                     style: "secondary",
-                    id: "back_to_main",
+                    id: `back_to_main:${adminId}`,
                     action: { type: "submit" },
                 },
             ],
@@ -153,7 +153,7 @@ const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, i
             type: "button",
             label: "Go to pay",
             style: "primary",
-            id: `go_to_pay_${amount}`, // 将金额编码进 ID，防止 metadata 丢失
+            id: `go_to_pay_${amount}:${adminId}`, // 将金额和 adminId 编码进 ID
             action: { type: "submit" },
         })
         components.push({
@@ -168,7 +168,7 @@ const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, i
         type: "button",
         label: "← Back",
         style: "secondary",
-        id: "back_to_amounts",
+        id: `back_to_amounts:${adminId}`,
         action: { type: "submit" },
     })
 

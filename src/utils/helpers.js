@@ -36,13 +36,25 @@ function extractConversationId(req) {
    * @returns {number|null} 金额
    */
   function getAmountFromComponentId(componentId) {
+    // 兼容带 admin_id 的 ID，例如 "tip_5:12345"
+    const baseId = componentId.split(':')[0];
     const amountMap = {
       tip_1: 1,
       tip_5: 5,
       tip_10: 10,
       tip_20: 20,
     };
-    return amountMap[componentId] || null;
+    return amountMap[baseId] || null;
+  }
+
+  /**
+   * 从组件 ID 中提取客服 ID
+   * @param {string} componentId - 组件 ID
+   * @returns {string|null} 客服 ID
+   */
+  function getAdminIdFromComponentId(componentId) {
+    if (!componentId || !componentId.includes(':')) return null;
+    return componentId.split(':')[1];
   }
   
   /**
@@ -145,6 +157,7 @@ module.exports = {
     extractAgentName,
     extractConversationId,
     getAmountFromComponentId,
+    getAdminIdFromComponentId,
     logWithPrefix,
     generateSocketSignature,
 };

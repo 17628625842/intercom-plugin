@@ -1,4 +1,11 @@
-const { extractConversationId, getAmountFromComponentId, logWithPrefix, generateSocketSignature, extractAgentName } = require("../utils/helpers")
+const { 
+    extractConversationId, 
+    getAmountFromComponentId, 
+    getAdminIdFromComponentId,
+    logWithPrefix, 
+    generateSocketSignature, 
+    extractAgentName 
+} = require("../utils/helpers")
 const { userMainCanvas, userCustomAmountCanvas, userPaymentCanvas } = require("../constants/canvasTemplates")
 const conversationService = require("../services/conversationService")
 const socketController = require("./socketController")
@@ -31,22 +38,37 @@ const initialize = (req, res) => {
 const submit = (req, res) => {
     const { component_id, card_creation_options, context, input_values, customer, user, current_canvas } = req.body
     
-    // 优先级：请求体中的 options > 当前卡片的 metadata > 兜底
-    const adminId = card_creation_options?.admin_id || current_canvas?.metadata?.adminId || "unknown"
+    // 优先级：请求体中的 options > 当前卡片的 metadata > 从 component_id 解析 > 兜底
+    let adminId = card_creation_options?.admin_id || current_canvas?.metadata?.adminId;
+    
+    // 如果上面都没拿到，尝试从按钮 ID 中提取（最可靠的持久化方案）
+    if (!adminId || adminId === "unknown") {
+        const extractedAdminId = getAdminIdFromComponentId(component_id);
+        if (extractedAdminId) {
+            adminId = extractedAdminId;
+            logWithPrefix("🔗", `从组件 ID 提取到客服 ID: ${adminId}`);
+        }
+    }
+    
+    if (!adminId) adminId = "unknown";
+
     const agentName = card_creation_options?.admin_name || current_canvas?.metadata?.agentName || "Support Agent"
     const conversationId = context?.conversation_id || current_canvas?.metadata?.conversationId || extractConversationId(req) || "unknown"
     
     // 鲁棒性获取 userId
     const userId = user?.external_id || user?.user_id || customer?.user_id || customer?.id || "unknown"
     
-    logWithPrefix("🎯", `用户操作: ${component_id}, 客服: ${agentName} (${adminId}), 对话: ${conversationId}`, req.body)
+    // 获取基础的 component_id (去掉 :adminId 部分)
+    const baseComponentId = component_id.split(':')[0];
+    
+    logWithPrefix("🎯", `用户操作: ${baseComponentId}, 客服: ${agentName} (${adminId}), 对话: ${conversationId}`)
 
     // 1. 处理视图切换
-    if (component_id === "show_custom_input") {
+    if (baseComponentId === "show_custom_input") {
         return res.json(userCustomAmountCanvas(conversationId, adminId, agentName))
     }
 
-    if (component_id === "back_to_main" || component_id === "back_to_amounts") {
+    if (baseComponentId === "back_to_main" || baseComponentId === "back_to_amounts") {
         return res.json(userMainCanvas(conversationId, agentName, adminId))
     }
 
@@ -54,7 +76,7 @@ const submit = (req, res) => {
     let amount = getAmountFromComponentId(component_id)
 
     // 处理自定义金额提交
-    if (component_id === "tip_custom_submit") {
+    if (baseComponentId === "tip_custom_submit") {
         const customAmount = input_values?.custom_amount_input
         if (customAmount) {
             amount = parseFloat(customAmount)
@@ -82,11 +104,11 @@ const submit = (req, res) => {
     }
 
     // 4. 处理支付确认按钮点击 (Go to Pay)
-    if (component_id === "go_to_pay" || component_id.startsWith("go_to_pay_")) {
+    if (baseComponentId === "go_to_pay" || baseComponentId.startsWith("go_to_pay_")) {
         // 优先从 ID 中提取金额，如果失败则回退到 metadata
         let currentAmount = 0
-        if (component_id.startsWith("go_to_pay_")) {
-            const extractedAmount = parseFloat(component_id.replace("go_to_pay_", ""))
+        if (baseComponentId.startsWith("go_to_pay_")) {
+            const extractedAmount = parseFloat(baseComponentId.replace("go_to_pay_", ""))
             if (!isNaN(extractedAmount)) {
                 currentAmount = extractedAmount
                 logWithPrefix("💰", `从按钮 ID 提取到金额: ${currentAmount}`)
