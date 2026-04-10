@@ -67,39 +67,78 @@ const userMainCanvas = (conversationId) => ({
     canvas: {
         content: {
             components: [
-                { type: "text", text: "💝 Thank you!", style: "header" },
+                { type: "text", text: "❤️ Thank Manager!", style: "header" },
                 { type: "text", text: "Your support means a lot ✨", style: "muted" },
                 {
                     type: "button",
+                    label: "💵 $1",
+                    style: "secondary",
+                    id: "tip_1",
+                    action: { type: "submit" },
+                },
+                {
+                    type: "button",
                     label: "💵 $5",
-                    style: "primary",
+                    style: "secondary",
                     id: "tip_5",
                     action: { type: "submit" },
                 },
                 {
                     type: "button",
                     label: "💵 $10",
-                    style: "primary",
+                    style: "secondary",
                     id: "tip_10",
                     action: { type: "submit" },
                 },
-                { type: "divider" },
                 {
-                    type: "input",
-                    id: "custom_amount_input",
-                    label: "Custom Amount ($)",
-                    placeholder: "Enter amount",
+                    type: "button",
+                    label: "💵 $20",
+                    style: "secondary",
+                    id: "tip_20",
+                    action: { type: "submit" },
                 },
                 {
                     type: "button",
-                    label: "✨ Tip Custom Amount",
+                    label: "✨ Custom Amount",
                     style: "secondary",
-                    id: "tip_custom",
+                    id: "show_custom_input",
                     action: { type: "submit" },
                 },
             ],
         },
-        metadata: { conversationId },
+        metadata: { conversationId, currentView: "main" },
+    },
+})
+
+// 用户端自定义金额输入界面模板
+const userCustomAmountCanvas = (conversationId) => ({
+    canvas: {
+        content: {
+            components: [
+                { type: "text", text: "✨ Custom Amount", style: "header" },
+                {
+                    type: "input",
+                    id: "custom_amount_input",
+                    label: "Enter amount ($)",
+                    placeholder: "e.g. 15",
+                },
+                {
+                    type: "button",
+                    label: "Confirm",
+                    style: "primary",
+                    id: "tip_custom_submit",
+                    action: { type: "submit" },
+                },
+                {
+                    type: "button",
+                    label: "← Back",
+                    style: "secondary",
+                    id: "back_to_main",
+                    action: { type: "submit" },
+                },
+            ],
+        },
+        metadata: { conversationId, currentView: "custom_input" },
     },
 })
 
@@ -138,5 +177,6 @@ module.exports = {
     adminMainCanvas,
     adminSuccessCanvas,
     userMainCanvas,
+    userCustomAmountCanvas,
     userPaymentCanvas,
 }

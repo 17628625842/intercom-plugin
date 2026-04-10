@@ -1,5 +1,5 @@
 const { extractConversationId, getAmountFromComponentId, logWithPrefix, generateSocketSignature } = require("../utils/helpers")
-const { userMainCanvas, userPaymentCanvas } = require("../constants/canvasTemplates")
+const { userMainCanvas, userCustomAmountCanvas, userPaymentCanvas } = require("../constants/canvasTemplates")
 const conversationService = require("../services/conversationService")
 const socketController = require("./socketController")
 
@@ -40,54 +40,68 @@ const submit = (req, res) => {
         previousAmount
     })
 
-    // 处理返回金额选择界面
-    if (component_id === "back_to_amounts") {
-        const response = userMainCanvas(conversationId)
-        res.json(response)
-        return
+    // 1. 处理视图切换
+    if (component_id === "show_custom_input") {
+        return res.json(userCustomAmountCanvas(conversationId))
     }
 
-    // 获取打赏金额
+    if (component_id === "back_to_main" || component_id === "back_to_amounts") {
+        return res.json(userMainCanvas(conversationId))
+    }
+
+    // 2. 获取打赏金额
     let amount = getAmountFromComponentId(component_id)
 
-    // 处理自定义金额
-    if (component_id === "tip_custom") {
+    // 处理自定义金额提交
+    if (component_id === "tip_custom_submit") {
         const customAmount = input_values?.custom_amount_input
         if (customAmount) {
             amount = parseFloat(customAmount)
             logWithPrefix("💰", `自定义金额: ${amount}`)
         }
+        
+        if (!amount || isNaN(amount) || amount <= 0) {
+            // 如果金额无效，可以返回错误提示或回到输入界面
+            // 这里简单处理，回到主界面
+            return res.json(userMainCanvas(conversationId))
+        }
     }
 
-    // 如果当前操作不是选择金额，则使用之前的金额
-    if (!amount && previousAmount) {
-        amount = previousAmount
+    // 3. 处理支付跳转逻辑
+    if (amount) {
+        // 生成连接信息
+        const signature = generateSocketSignature(userId, socketController.SOCKET_SECRET)
+        const socketInfo = {
+            endpoint: "/ws",
+            userId,
+            signature
+        }
+        // 返回支付跳转界面
+        return res.json(userPaymentCanvas(adminId, amount, conversationId, socketInfo))
     }
 
-    // 处理支付按钮
+    // 4. 处理支付确认按钮点击 (Go to Pay)
     if (component_id === "go_to_pay") {
-        logWithPrefix("💳", `用户${userId}点击去支付, 对话: ${conversationId}, 金额: ${amount}`)
+        const currentAmount = previousAmount || 0
+        logWithPrefix("💳", `用户${userId}点击去支付, 对话: ${conversationId}, 金额: ${currentAmount}`)
         
         // 发送 WebSocket 消息通知用户端支付已启动
         socketController.sendMessage(userId, {
             event: "payment_started",
             message: "Payment process initiated",
-            amount: amount,
+            amount: currentAmount,
             timestamp: new Date().toISOString()
         })
+
+        // 重新生成签名信息保持连接有效性
+        const signature = generateSocketSignature(userId, socketController.SOCKET_SECRET)
+        const socketInfo = { endpoint: "/ws", userId, signature }
+        
+        return res.json(userPaymentCanvas(adminId, currentAmount, conversationId, socketInfo))
     }
 
-    // 生成连接信息
-    const signature = generateSocketSignature(userId, socketController.SOCKET_SECRET)
-    const socketInfo = {
-        endpoint: "/ws",
-        userId,
-        signature
-    }
-
-    // 返回支付跳转界面
-    const response = userPaymentCanvas(adminId, amount || 0, conversationId, socketInfo)
-    res.json(response)
+    // 兜底返回主界面
+    res.json(userMainCanvas(conversationId))
 }
 
 module.exports = {

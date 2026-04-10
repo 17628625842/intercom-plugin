@@ -36,8 +36,10 @@ function extractConversationId(req) {
    */
   function getAmountFromComponentId(componentId) {
     const amountMap = {
+      tip_1: 1,
       tip_5: 5,
       tip_10: 10,
+      tip_20: 20,
     };
     return amountMap[componentId] || null;
   }
