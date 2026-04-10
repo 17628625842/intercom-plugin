@@ -36,10 +36,7 @@ const submit = (req, res) => {
         previousAmount = parseFloat(canvas.metadata.amount)
     }
 
-    logWithPrefix("🎯", `用户操作: ${component_id}, 对话: ${conversationId}, 现有金额: ${previousAmount}`, {
-        userId,
-        metadata: canvas?.metadata
-    }, req.body)
+    logWithPrefix("🎯", `用户操作: ${component_id}, 对话: ${conversationId}, 现有金额: ${previousAmount}`, req.body)
 
     // 记录操作
     conversationService.logConversationAction(conversationId, "user_submit", {
