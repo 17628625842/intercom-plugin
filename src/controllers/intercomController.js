@@ -24,15 +24,16 @@ const submit = (req, res) => {
     const conversationId = extractConversationId(req) || canvas?.metadata?.conversationId || "unknown"
     const adminId = req.body.admin?.id || "unknown"
     const adminName = extractAgentName(req)
-
+    // 获取输入框中的名字
+    const inputAgentName = req.body.input_values?.agent_name_input?.trim();
     logWithPrefix("🔍", `客服操作: ${component_id}, 对话 ID: ${conversationId}`)
 
     // 生成卡片创建选项
-    const cardCreationOptions = conversationService.generateCardCreationOptions(adminId, adminName, conversationId)
+    const cardCreationOptions = conversationService.generateCardCreationOptions(adminId, inputAgentName || adminName, conversationId)
 
     // 返回响应，包含更新后的界面和卡片创建选项
     const response = {
-        ...adminSuccessCanvas(conversationId, adminName),
+        ...adminSuccessCanvas(conversationId, inputAgentName || adminName),
         card_creation_options: cardCreationOptions,
     }
 
