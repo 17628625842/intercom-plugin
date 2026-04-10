@@ -143,7 +143,7 @@ const userCustomAmountCanvas = (conversationId) => ({
 })
 
 // 用户端支付跳转界面模板
-const userPaymentCanvas = (adminId, amount, conversationId, sseInfo = null) => ({
+const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null) => ({
     canvas: {
         content: {
             components: [
@@ -169,7 +169,7 @@ const userPaymentCanvas = (adminId, amount, conversationId, sseInfo = null) => (
                 },
             ],
         },
-        metadata: { conversationId, sseInfo, amount },
+        metadata: { conversationId, socketInfo, amount: String(amount) }, // 明确将 amount 转为字符串存入 metadata
     },
 })
 
