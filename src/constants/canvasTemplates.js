@@ -51,7 +51,7 @@ const adminSuccessCanvas = (conversationId) => ({
 })
 
 // 用户端打赏主界面模板
-const userMainCanvas = (conversationId, agentName) => ({
+const userMainCanvas = (conversationId, agentName, adminId = "unknown") => ({
     canvas: {
         content: {
             components: [
@@ -94,12 +94,12 @@ const userMainCanvas = (conversationId, agentName) => ({
                 },
             ],
         },
-        metadata: { conversationId, currentView: "main" },
+        metadata: { conversationId, adminId, agentName, currentView: "main" },
     },
 })
 
 // 用户端自定义金额输入界面模板
-const userCustomAmountCanvas = (conversationId) => ({
+const userCustomAmountCanvas = (conversationId, adminId = "unknown", agentName = "Support Agent") => ({
     canvas: {
         content: {
             components: [
@@ -126,47 +126,57 @@ const userCustomAmountCanvas = (conversationId) => ({
                 },
             ],
         },
-        metadata: { conversationId, currentView: "custom_input" },
+        metadata: { conversationId, adminId, agentName, currentView: "custom_input" },
     },
 })
 
 // 用户端支付跳转界面模板
-const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, isProcessing = false) => {
-    const canvas = {
-        content: {
-            components: [
-                {
-                    type: "text",
-                    text: `💰 打赏金额: $${amount}`,
-                    style: "header",
-                    align: "center",
-                },
-                {
-                    type: "button",
-                    label: "Go to pay",
-                    style: "primary",
-                    id: `go_to_pay_${amount}`, // 将金额编码进 ID，防止 metadata 丢失
-                    action: { type: "submit" },
-                },
-                {
-                    type: "button",
-                    label: "← Back",
-                    style: "secondary",
-                    id: "back_to_amounts",
-                    action: { type: "submit" },
-                },
-            ],
+const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, isProcessing = false, agentName = "Support Agent") => {
+    const components = [
+        {
+            type: "text",
+            text: `💰 打赏金额: $${amount}`,
+            style: "header",
+            align: "center",
         },
-        metadata: { conversationId, socketInfo, amount: String(amount) },
-    }
+    ]
 
     if (isProcessing) {
-        canvas.content.components.push({
+        components.push({
             type: "text",
             text: "For payment details, please visit the [Personal Center -> Account -> Balance] page to view them.",
             style: "muted",
             align: "center",
         })
+    } else {
+        components.push({
+            type: "button",
+            label: "Go to pay",
+            style: "primary",
+            id: `go_to_pay_${amount}`, // 将金额编码进 ID，防止 metadata 丢失
+            action: { type: "submit" },
+        })
+        components.push({
+            type: "text",
+            text: "For payment details, please visit the [Personal Center -> Account -> Balance] page to view them.",
+            style: "muted",
+            align: "center",
+        })
+    }
+
+    components.push({
+        type: "button",
+        label: "← Back",
+        style: "secondary",
+        id: "back_to_amounts",
+        action: { type: "submit" },
+    })
+
+    const canvas = {
+        content: {
+            components: components,
+        },
+        metadata: { conversationId, adminId, agentName, socketInfo, amount: String(amount) },
     }
 
     return { canvas }
