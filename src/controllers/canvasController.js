@@ -94,7 +94,7 @@ const submit = (req, res) => {
         // 如果点击去支付时没有实时选择金额，则使用 metadata 中的金额
         const currentAmount = previousAmount
         
-        logWithPrefix("💳", `用户 ${userId} 点击去支付, 对话: ${conversationId}, 最终确认金额: ${currentAmount}`)
+        logWithPrefix("💳", `用户 ${userId} 点击去支付, 对话: ${conversationId}, 最终确认金额: ${currentAmount}`, req.body)
         
         if (currentAmount > 0) {
             // 发送 WebSocket 消息通知用户端支付已启动
