@@ -12,7 +12,8 @@ const initialize = (req, res) => {
 
     const cardCreationOptions = req.body.card_creation_options || {};
     let agentName = cardCreationOptions.agentName;
-
+    logWithPrefix("🔍", `用户端 - 客服名称: ${agentName}`, cardCreationOptions)
+    
     // 如果 Configure Flow 没有传递，尝试从其他来源获取
     if (!agentName || agentName === 'Support Agent') {
         agentName = extractAgentName(req);
