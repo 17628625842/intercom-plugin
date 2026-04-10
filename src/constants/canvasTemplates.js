@@ -7,19 +7,13 @@ const adminMainCanvas = (conversationId) => ({
     canvas: {
         content: {
             components: [
-                {
-                    type: "text",
-                    text: "💰 打赏插件",
-                    style: "header",
-                },
-                {
-                    type: "text",
-                    text: "点击下方按钮，向用户发送打赏卡片",
-                },
+                { type: "text", text: "💝 发送打赏卡片", style: "header" },
+                { type: "spacer", size: "m" },
+                { type: "input", id: "agent_name_input", label: "您的英文名", placeholder: "请输入您的名字" },
                 {
                     type: "button",
                     id: "send_tip_card",
-                    label: "📤 发送打赏卡片",
+                    label: "发送",
                     style: "primary",
                     action: {
                         type: "submit",
@@ -38,19 +32,13 @@ const adminSuccessCanvas = (conversationId) => ({
             components: [
                 { type: "text", text: "✅ 已发送", style: "header" },
                 { type: "divider" },
-                {
-                    type: "text",
-                    text: "💰 打赏插件",
-                    style: "header",
-                },
-                {
-                    type: "text",
-                    text: "点击下方按钮，向用户发送打赏卡片",
-                },
+                { type: "text", text: "💝 发送打赏卡片", style: "header" },
+                { type: "spacer", size: "m" },
+                { type: "input", id: "agent_name_input", label: "您的英文名", placeholder: "请输入您的名字" },
                 {
                     type: "button",
                     id: "send_tip_card",
-                    label: "📤 发送打赏卡片",
+                    label: "发送",
                     style: "primary",
                     action: {
                         type: "submit",
@@ -63,11 +51,11 @@ const adminSuccessCanvas = (conversationId) => ({
 })
 
 // 用户端打赏主界面模板
-const userMainCanvas = (conversationId) => ({
+const userMainCanvas = (conversationId, agentName) => ({
     canvas: {
         content: {
             components: [
-                { type: "text", text: "❤️ Thank Manager!", style: "header" },
+                { type: "text", text: `❤️ Thank ${agentName}!`, style: "header" },
                 { type: "text", text: "Your support means a lot ✨", style: "muted" },
                 {
                     type: "button",
@@ -115,7 +103,7 @@ const userCustomAmountCanvas = (conversationId) => ({
     canvas: {
         content: {
             components: [
-                { type: "text", text: "✨ Custom Amount", style: "header" },
+                { type: "text", text: "✨ Custom Tip Amount", style: "header" },
                 {
                     type: "input",
                     id: "custom_amount_input",
@@ -155,7 +143,7 @@ const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null) =
                 },
                 {
                     type: "button",
-                    label: "去支付",
+                    label: "Go to pay",
                     style: "primary",
                     id: `go_to_pay_${amount}`, // 将金额编码进 ID，防止 metadata 丢失
                     action: { type: "submit" },

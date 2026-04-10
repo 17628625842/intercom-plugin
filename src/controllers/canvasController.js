@@ -1,4 +1,4 @@
-const { extractConversationId, getAmountFromComponentId, logWithPrefix, generateSocketSignature } = require("../utils/helpers")
+const { extractConversationId, getAmountFromComponentId, logWithPrefix, generateSocketSignature, extractAgentName } = require("../utils/helpers")
 const { userMainCanvas, userCustomAmountCanvas, userPaymentCanvas } = require("../constants/canvasTemplates")
 const conversationService = require("../services/conversationService")
 const socketController = require("./socketController")
@@ -10,12 +10,20 @@ const initialize = (req, res) => {
     const conversationId = extractConversationId(req)
     logWithPrefix("🎯", `Canvas 用户端 - 对话 ID: ${conversationId}`)
 
+    const cardCreationOptions = req.body.card_creation_options || {};
+    let agentName = cardCreationOptions.agentName;
+
+    // 如果 Configure Flow 没有传递，尝试从其他来源获取
+    if (!agentName || agentName === 'Support Agent') {
+        agentName = extractAgentName(req);
+    }
+
     // 记录操作
     conversationService.logConversationAction(conversationId, "user_initialize", {
         cardCreationOptions: req.body.card_creation_options,
     })
 
-    const response = userMainCanvas(conversationId)
+    const response = userMainCanvas(conversationId, agentName)
     res.json(response)
 }
 

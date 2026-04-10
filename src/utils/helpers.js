@@ -76,7 +76,73 @@ function generateSocketSignature(userId, secret) {
     return crypto.createHmac("sha256", secret).update(idStr).digest("hex")
 }
 
+/**
+ * 从请求中提取客服名称
+ * @param {object} req - 请求对象
+ * @returns {string} 客服名称
+ */
+function extractAgentName(req) {
+    console.log('🔍 开始提取客服名称...');
+
+    // 1. 优先从 data.item.title 获取（Inbox 插件的数据结构）
+    const itemTitle = req.body.data?.item?.title || '';
+    console.log(`🔍 检查 data.item.title: "${itemTitle}"`);
+
+    // 2. 也检查 conversation.title（旧的数据结构）
+    const conversationTitle = req.body.conversation?.title || '';
+    console.log(`🔍 检查 conversation.title: "${conversationTitle}"`);
+
+    const title = itemTitle || conversationTitle;
+
+    // 验证 title 是否像一个人名（不包含连字符、不是部门名称等）
+    const invalidPatterns = ['-', 'sales', 'support', 'service', 'team', 'department', 'help', 'customer'];
+    const isLikelyPersonName = title.trim() !== '' &&
+        title.length <= 20 &&
+        !invalidPatterns.some(pattern => title.toLowerCase().includes(pattern));
+
+    if (isLikelyPersonName) {
+        console.log(`✅ 从 title 获取客服名称: ${title.trim()}`);
+        return title.trim();
+    }
+
+    // 3. 从 canvas metadata 中获取（如果之前已保存）
+    const metadataAgentName = req.body.canvas?.metadata?.agentName || req.body.current_canvas?.metadata?.agentName;
+    if (metadataAgentName && metadataAgentName !== 'Support Agent') {
+        console.log(`✅ 从 canvas metadata 获取客服名称: ${metadataAgentName}`);
+        return metadataAgentName;
+    }
+
+    // 4. 从 conversation_parts 中提取
+    const parts = req.body.conversation?.conversation_parts?.conversation_parts
+        || req.body.data?.item?.conversation_parts?.conversation_parts
+        || [];
+    if (Array.isArray(parts) && parts.length > 0) {
+        const adminMessages = parts.filter(part => part.author?.type === 'admin');
+        if (adminMessages.length > 0) {
+            const latestMessage = adminMessages[adminMessages.length - 1].body || '';
+            console.log(`🔍 检查最新客服消息: "${latestMessage.substring(0, 100)}..."`);
+            const nameMatch = latestMessage.match(/Hi, I'm (\w+), happy to help you today!|Hello, my name is (\w+)|I'm (\w+)/i);
+            if (nameMatch) {
+                const extractedName = nameMatch[1] || nameMatch[2] || nameMatch[3];
+                console.log(`✅ 从消息中提取客服名称: ${extractedName}`);
+                return extractedName;
+            }
+        }
+    }
+
+    // 5. 最后才考虑 admin.name（但通常不用这个）
+    if (req.body.admin?.name) {
+        const adminName = req.body.admin.name;
+        console.log(`⚠️ 回退到 admin.name: ${adminName}`);
+        return adminName;
+    }
+
+    console.log('❌ 未找到有效客服名称，使用默认值');
+    return 'Support Agent';
+}
+
 module.exports = {
+    extractAgentName,
     extractConversationId,
     getAmountFromComponentId,
     logWithPrefix,

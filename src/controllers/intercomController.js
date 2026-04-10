@@ -1,4 +1,4 @@
-const { extractConversationId, logWithPrefix } = require("../utils/helpers")
+const { extractConversationId, logWithPrefix, extractAgentName } = require("../utils/helpers")
 const { adminMainCanvas, adminSuccessCanvas } = require("../constants/canvasTemplates")
 const conversationService = require("../services/conversationService")
 
@@ -28,7 +28,7 @@ const submit = (req, res) => {
     const { component_id, canvas } = req.body
     const conversationId = extractConversationId(req) || canvas?.metadata?.conversationId || "unknown"
     const adminId = req.body.admin?.id || "unknown"
-    const adminName = req.body.admin?.name || "客服"
+    const adminName = extractAgentName(req)
 
     logWithPrefix("🔍", `客服操作: ${component_id}, 对话 ID: ${conversationId}`)
 
@@ -44,7 +44,7 @@ const submit = (req, res) => {
 
     // 返回响应，包含更新后的界面和卡片创建选项
     const response = {
-        ...adminSuccessCanvas(conversationId),
+        ...adminSuccessCanvas(conversationId, adminName),
         card_creation_options: cardCreationOptions,
     }
 
