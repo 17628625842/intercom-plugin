@@ -11,8 +11,8 @@ const initialize = (req, res) => {
     logWithPrefix("🎯", `Canvas 用户端 - 对话 ID: ${conversationId}`)
 
     const cardCreationOptions = req.body.card_creation_options || {};
-    let agentName = cardCreationOptions.agentName;
-    logWithPrefix("🔍", `用户端 - 客服名称: ${agentName}`, cardCreationOptions)
+    let agentName = cardCreationOptions.admin_name;
+    logWithPrefix("🔍", `用户端 - 客服名称: ${agentName}`)
     
     // 如果 Configure Flow 没有传递，尝试从其他来源获取
     if (!agentName || agentName === 'Support Agent') {
@@ -34,7 +34,7 @@ const submit = (req, res) => {
     // 鲁棒性获取 userId
     const userId = user?.external_id || user?.user_id || customer?.user_id || customer?.id || "unknown"
     
-    logWithPrefix("🎯", `用户操作: ${component_id}, 对话: ${conversationId}`, req.body)
+    logWithPrefix("🎯", `用户操作: ${component_id}, 对话: ${conversationId}`, card_creation_options)
 
     // 1. 处理视图切换
     if (component_id === "show_custom_input") {
