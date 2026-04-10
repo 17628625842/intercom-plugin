@@ -39,7 +39,7 @@ const submit = (req, res) => {
     logWithPrefix("🎯", `用户操作: ${component_id}, 对话: ${conversationId}, 现有金额: ${previousAmount}`, {
         userId,
         metadata: canvas?.metadata
-    })
+    }, req.body)
 
     // 记录操作
     conversationService.logConversationAction(conversationId, "user_submit", {
@@ -94,7 +94,7 @@ const submit = (req, res) => {
         // 如果点击去支付时没有实时选择金额，则使用 metadata 中的金额
         const currentAmount = previousAmount
         
-        logWithPrefix("💳", `用户 ${userId} 点击去支付, 对话: ${conversationId}, 最终确认金额: ${currentAmount}`, req.body)
+        logWithPrefix("💳", `用户 ${userId} 点击去支付, 对话: ${conversationId}, 最终确认金额: ${currentAmount}`)
         
         if (currentAmount > 0) {
             // 发送 WebSocket 消息通知用户端支付已启动
