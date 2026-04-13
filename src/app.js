@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const compression = require('compression');
 const routes = require('./routes');
+const openAppView = require('./views/openAppView');
 
 const app = express();
 
@@ -19,9 +20,9 @@ app.use((req, res, next) => {
 // 注册路由
 app.use('/', routes);
 
-// 打开 App 接口 - 返回空白页面
+// 打开 App 接口 - 返回页面并尝试通过 URL Scheme 唤起 App
 app.get('/open/app', (req, res) => {
-  res.send('<!DOCTYPE html><html><head><title>Opening App...</title></head><body></body></html>');
+  res.send(openAppView());
 });
 
 // 健康检查
