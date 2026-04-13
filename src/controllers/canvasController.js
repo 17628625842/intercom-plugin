@@ -18,7 +18,7 @@ const initialize = (req, res) => {
     logWithPrefix("🎯", `Canvas 用户端 - 对话 ID: ${conversationId}`)
 
     const cardCreationOptions = req.body.card_creation_options || {};
-    let agentName = extractAgentName(req)
+    const agentName = "Support Agent"
     let adminId = cardCreationOptions.admin_id || "unknown";
     
     logWithPrefix("🔍", `用户端初始化 - 客服: ${agentName} (${adminId})`)
@@ -47,18 +47,6 @@ const submit = (req, res) => {
     if (!adminId) adminId = "unknown";
 
     const agentName = "Support Agent"
-    const components = current_canvas?.content?.components || [];
-    for (const comp of components) {
-        if (comp.type === 'text' && comp.text) {
-            // 匹配 "💝 Thank Allen!" 或 "Thank Allen!" 格式
-            const match = comp.text.match(/Thank\s+(\w+)/i);
-            if (match && match[1]) {
-                agentName = match[1];
-                console.log(`✅ 从 canvas 文本中解析客服名字: ${agentName}`);
-                break;
-            }
-        }
-    }
 
     const conversationId = context?.conversation_id || current_canvas?.metadata?.conversationId || extractConversationId(req) || "unknown"
     
