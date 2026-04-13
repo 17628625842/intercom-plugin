@@ -15,10 +15,9 @@ class ConversationService {
      * @param {string} conversationId - 对话 ID
      * @returns {object} 卡片创建选项
      */
-    generateCardCreationOptions(adminId, adminName, conversationId) {
+    generateCardCreationOptions(adminId, conversationId) {
       return {
         admin_id: adminId,
-        admin_name: adminName,
         conversationId: conversationId,
         created_at: new Date().toISOString(),
       };

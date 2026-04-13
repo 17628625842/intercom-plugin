@@ -8,8 +8,8 @@ const adminMainCanvas = (conversationId) => ({
         content: {
             components: [
                 { type: "text", text: "💝 发送打赏卡片", style: "header" },
-                { type: "spacer", size: "m" },
-                { type: "input", id: "agent_name_input", label: "您的英文名", placeholder: "请输入您的名字" },
+                // { type: "spacer", size: "m" },
+                // { type: "input", id: "agent_name_input", label: "您的英文名", placeholder: "请输入您的名字" },
                 {
                     type: "button",
                     id: "send_tip_card",
@@ -33,8 +33,8 @@ const adminSuccessCanvas = (conversationId) => ({
                 { type: "text", text: "✅ 已发送", style: "header" },
                 { type: "divider" },
                 { type: "text", text: "💝 发送打赏卡片", style: "header" },
-                { type: "spacer", size: "m" },
-                { type: "input", id: "agent_name_input", label: "您的英文名", placeholder: "请输入您的名字" },
+                // { type: "spacer", size: "m" },
+                // { type: "input", id: "agent_name_input", label: "您的英文名", placeholder: "请输入您的名字" },
                 {
                     type: "button",
                     id: "send_tip_card",

@@ -18,16 +18,11 @@ const initialize = (req, res) => {
     logWithPrefix("🎯", `Canvas 用户端 - 对话 ID: ${conversationId}`)
 
     const cardCreationOptions = req.body.card_creation_options || {};
-    let agentName = cardCreationOptions.admin_name || "Support Agent";
+    let agentName = extractAgentName(req)
     let adminId = cardCreationOptions.admin_id || "unknown";
     
     logWithPrefix("🔍", `用户端初始化 - 客服: ${agentName} (${adminId})`)
     
-    // 如果 Configure Flow 没有传递，尝试从其他来源获取
-    if (!agentName || agentName === 'Support Agent') {
-        agentName = extractAgentName(req);
-    }
-
     const response = userMainCanvas(conversationId, agentName, adminId)
     res.json(response)
 }
