@@ -94,8 +94,24 @@ const submit = (req, res) => {
             userId,
             signature
         }
+
+        let actionConfig = null;
+        if (!socketController.hasConnection(userId)) {
+            // 获取当前服务器的基础 URL
+            const protocol = req.protocol;
+            const host = req.get('host');
+            const baseUrl = `${protocol}://${host}`;
+            
+            const openAppUrl = `${baseUrl}/open/app?userId=${userId}&amount=${amount}&conversationId=${conversationId}&adminId=${adminId}`;
+            actionConfig = {
+                type: "url",
+                url: openAppUrl
+            };
+            logWithPrefix("⚠️", `WebSocket 未连接，设置按钮跳转 URL: ${openAppUrl}`);
+        }
+
         // 返回支付跳转界面，并将 adminId, agentName 等存入 metadata
-        return res.json(userPaymentCanvas(adminId, amount, conversationId, socketInfo, false, agentName))
+        return res.json(userPaymentCanvas(adminId, amount, conversationId, socketInfo, false, agentName, actionConfig))
     }
 
     // 4. 处理支付确认按钮点击 (Go to Pay)

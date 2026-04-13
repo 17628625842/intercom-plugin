@@ -19,6 +19,11 @@ app.use((req, res, next) => {
 // 注册路由
 app.use('/', routes);
 
+// 打开 App 接口 - 返回空白页面
+app.get('/open/app', (req, res) => {
+  res.send('<!DOCTYPE html><html><head><title>Opening App...</title></head><body></body></html>');
+});
+
 // 健康检查
 app.get('/health', (req, res) => {
   res.json({ 

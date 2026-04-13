@@ -131,7 +131,7 @@ const userCustomAmountCanvas = (conversationId, adminId = "unknown", agentName =
 })
 
 // 用户端支付跳转界面模板
-const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, isProcessing = false, agentName = "Support Agent") => {
+const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, isProcessing = false, agentName = "Support Agent", actionConfig = null) => {
     const components = [
         {
             type: "text",
@@ -140,12 +140,15 @@ const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, i
             align: "center",
         },
     ]
+
+    const payAction = actionConfig || { type: "submit" };
+
     components.push({
         type: "button",
         label: "Go to pay",
         style: "primary",
         id: `go_to_pay_${amount}:${adminId}`, // 将金额和 adminId 编码进 ID
-        action: { type: "submit" },
+        action: payAction,
     })
     components.push({
         type: "button",
@@ -158,7 +161,7 @@ const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, i
     if (isProcessing) {
         components.push({
             type: "text",
-            text: "Check the payment result on the [Wallet] page.",
+            text: "For payment details, please visit the [Personal Center -> Account -> Balance] page to view them.",
             style: "muted",
             align: "center",
         })

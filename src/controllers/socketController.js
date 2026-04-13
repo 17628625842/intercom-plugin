@@ -81,8 +81,15 @@ const sendMessage = (userId, data) => {
     return false;
 };
 
+const hasConnection = (userId) => {
+    const idStr = String(userId);
+    const ws = connections.get(idStr);
+    return ws && ws.readyState === WebSocket.OPEN;
+};
+
 module.exports = {
     init,
     sendMessage,
+    hasConnection,
     SOCKET_SECRET
 };
