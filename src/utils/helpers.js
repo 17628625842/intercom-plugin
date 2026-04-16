@@ -153,6 +153,33 @@ function extractAgentName(req) {
     return 'Support Agent';
 }
 
+/**
+ * 判断请求是否来自 App
+ * @param {object} req - 请求对象
+ * @returns {boolean} 是否来自 App
+ */
+function isFromApp(req) {
+    // 1. 检查 customer/contact 对象中的 app 信息
+    const customer = req.body.customer || req.body.contact || {};
+    
+    // 如果有 ios_app_name 或 android_app_name，通常意味着用户安装了 App
+    // 但更准确的是看当前请求的上下文
+    if (customer.ios_app_name === 'Mulebuy' || customer.android_app_name === 'Mulebuy') {
+        // 如果 OS 是 iOS 或 Android，且没有明确的浏览器（或者浏览器是内嵌的）
+        const os = (customer.os || '').toLowerCase();
+        const browser = (customer.browser || '').toLowerCase();
+        
+        if (os.includes('ios') || os.includes('android')) {
+            // 在 App SDK 中，browser 字段通常为空或者特定值
+            if (!browser || browser === 'unknown' || browser.includes('intercom')) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 module.exports = {
     extractAgentName,
     extractConversationId,
@@ -160,4 +187,5 @@ module.exports = {
     getAdminIdFromComponentId,
     logWithPrefix,
     generateSocketSignature,
+    isFromApp,
 };

@@ -131,7 +131,7 @@ const userCustomAmountCanvas = (conversationId, adminId = "unknown", agentName =
 })
 
 // 用户端支付跳转界面模板
-const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, isProcessing = false, agentName = "Support Agent", actionConfig = null) => {
+const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, isProcessing = false, agentName = "Support Agent", actionConfig = null, error = null) => {
     const components = [
         {
             type: "text",
@@ -140,6 +140,15 @@ const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, i
             align: "center",
         },
     ]
+
+    if (error) {
+        components.push({
+            type: "text",
+            text: `⚠️ ${error}`,
+            style: "error",
+            align: "center",
+        })
+    }
 
     const payAction = actionConfig || { type: "submit" };
 

@@ -4,7 +4,8 @@ const {
     getAdminIdFromComponentId,
     logWithPrefix, 
     generateSocketSignature, 
-    extractAgentName 
+    extractAgentName,
+    isFromApp
 } = require("../utils/helpers")
 const { userMainCanvas, userCustomAmountCanvas, userPaymentCanvas } = require("../constants/canvasTemplates")
 const conversationService = require("../services/conversationService")
@@ -96,18 +97,34 @@ const submit = (req, res) => {
         }
 
         let actionConfig = null;
-        if (!socketController.hasConnection(userId)) {
-            // 获取当前服务器的基础 URL
-            const protocol = req.protocol;
-            const host = req.get('host');
-            const baseUrl = `${protocol}://${host}`;
-            
-            const openAppUrl = `${baseUrl}/open/app?userId=${userId}&amount=${amount}&conversationId=${conversationId}&adminId=${adminId}`;
+        
+        // 判断是否来自 App
+        if (isFromApp(req)) {
+            // App 情况：检查 WebSocket 连接
+            if (!socketController.hasConnection(userId)) {
+                // WebSocket 未连接，使用 /open/app 唤起逻辑
+                const protocol = req.protocol;
+                const host = req.get('host');
+                const baseUrl = `${protocol}://${host}`;
+                
+                const openAppUrl = `${baseUrl}/open/app?userId=${userId}&amount=${amount}&conversationId=${conversationId}&adminId=${adminId}`;
+                actionConfig = {
+                    type: "url",
+                    url: openAppUrl
+                };
+                logWithPrefix("⚠️", `App WebSocket 未连接，设置按钮跳转 URL: ${openAppUrl}`);
+            } else {
+                logWithPrefix("🔌", `App WebSocket 已连接，使用 submit 动作`);
+                // 默认 actionConfig 为 null，即使用 { type: "submit" }
+            }
+        } else {
+            // 非 App 情况（Web）：跳转到 mulebuy.com
+            const webPayUrl = `https://mulebuy.com/?amount=${amount}&adminId=${adminId}`;
             actionConfig = {
                 type: "url",
-                url: openAppUrl
+                url: webPayUrl
             };
-            logWithPrefix("⚠️", `WebSocket 未连接，设置按钮跳转 URL: ${openAppUrl}`);
+            logWithPrefix("🌐", `非 App 请求，设置按钮跳转 Web URL: ${webPayUrl}`);
         }
 
         // 返回支付跳转界面，并将 adminId, agentName 等存入 metadata
@@ -116,20 +133,54 @@ const submit = (req, res) => {
 
     // 4. 处理支付确认按钮点击 (Go to Pay)
     if (baseComponentId === "go_to_pay" || baseComponentId.startsWith("go_to_pay_")) {
-        // 优先从 ID 中提取金额，如果失败则回退到 metadata
+        // 先提取当前金额，确保校验失败时能正确传递给新生成的按钮
         let currentAmount = 0
         if (baseComponentId.startsWith("go_to_pay_")) {
             const extractedAmount = parseFloat(baseComponentId.replace("go_to_pay_", ""))
             if (!isNaN(extractedAmount)) {
                 currentAmount = extractedAmount
-                logWithPrefix("💰", `从按钮 ID 提取到金额: ${currentAmount}`)
             }
         }
-        
         if (currentAmount <= 0) {
             currentAmount = parseFloat(current_canvas?.metadata?.amount || 0)
         }
+
+        // --- 设备与按钮动作匹配校验 ---
+        const fromApp = isFromApp(req);
+        const hasWs = socketController.hasConnection(userId);
         
+        // 如果是 Web 环境但收到了 submit 请求 (或者是 App 环境但需要 URL 唤起却收到了 submit)
+        if (!fromApp || (fromApp && !hasWs)) {
+            logWithPrefix("⚠️", `设备与按钮动作不匹配! fromApp: ${fromApp}, hasWs: ${hasWs}. 重新生成界面。`);
+            
+            let actionConfig = null;
+            if (fromApp && !hasWs) {
+                // App 情况：WebSocket 掉线，需要重新生成 /open/app 跳转
+                const protocol = req.protocol;
+                const host = req.get('host');
+                const baseUrl = `${protocol}://${host}`;
+                const openAppUrl = `${baseUrl}/open/app?userId=${userId}&amount=${currentAmount}&conversationId=${conversationId}&adminId=${adminId}`;
+                actionConfig = { type: "url", url: openAppUrl };
+            } else if (!fromApp) {
+                // Web 情况：按钮原本是 submit 动作但现在在 Web 环境，改为 mulebuy.com
+                const webPayUrl = `https://mulebuy.com/?amount=${currentAmount}&adminId=${adminId}`;
+                actionConfig = { type: "url", url: webPayUrl };
+            }
+
+            // 返回带错误提示的新界面
+            return res.json(userPaymentCanvas(
+                adminId, 
+                currentAmount, 
+                conversationId, 
+                null, 
+                false, 
+                agentName, 
+                actionConfig, 
+                "Something went wrong, please try again (出错了 请重试)"
+            ));
+        }
+        // --- 校验结束 ---
+
         logWithPrefix("💳", `用户 ${userId} 点击去支付, 对话: ${conversationId}, 最终确认金额: ${currentAmount}`)
         
         if (currentAmount > 0) {
