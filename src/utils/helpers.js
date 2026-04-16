@@ -161,6 +161,7 @@ function extractAgentName(req) {
  * @returns {boolean} 是否来自 App
  */
 function isFromApp(req) {
+  logWithPrefix('isFromApp', '开始判断请求是否来自 App', req.body);
     const customer = req.body.contact || {};
     const browser = (customer.browser || '').toLowerCase();
     
