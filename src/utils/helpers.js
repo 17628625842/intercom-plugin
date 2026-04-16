@@ -156,30 +156,24 @@ function extractAgentName(req) {
 
 /**
  * 判断请求是否来自 App
+ * 逻辑：如果不是明确的浏览器环境，则视为 App 环境
  * @param {object} req - 请求对象
  * @returns {boolean} 是否来自 App
  */
 function isFromApp(req) {
-    logWithPrefix('isFromApp', '开始判断请求是否来自 App', req.body);
-    // 1. 检查 customer/contact 对象中的 app 信息
-    const customer = req.body.customer || req.body.contact || {};
+    const customer = req.body.contact || {};
+    const browser = (customer.browser || '').toLowerCase();
     
-    // 如果有 ios_app_name 或 android_app_name，通常意味着用户安装了 App
-    // 但更准确的是看当前请求的上下文
-    if (customer.ios_app_name === 'Mulebuy' || customer.android_app_name === 'Mulebuy') {
-        // 如果 OS 是 iOS 或 Android，且没有明确的浏览器（或者浏览器是内嵌的）
-        const os = (customer.os || '').toLowerCase();
-        const browser = (customer.browser || '').toLowerCase();
-        
-        if (os.includes('ios') || os.includes('android')) {
-            // 在 App SDK 中，browser 字段通常为空或者特定值
-            if (!browser || browser === 'unknown' || browser.includes('intercom')) {
-                return true;
-            }
-        }
+    // 定义明确的浏览器标识
+    const knownBrowsers = ['chrome', 'safari', 'firefox', 'edge', 'opera', 'ie', 'mobile_safari'];
+    
+    // 如果浏览器标识在已知列表中，说明是浏览器环境，返回 false
+    if (browser && knownBrowsers.includes(browser)) {
+        return false;
     }
 
-    return false;
+    // 否则（如 browser 为 unknown, null, 或包含 intercom 等），视为 App 环境
+    return true;
 }
 
 module.exports = {
