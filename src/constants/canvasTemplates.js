@@ -99,36 +99,52 @@ const userMainCanvas = (conversationId, agentName, adminId = "unknown") => ({
 })
 
 // 用户端自定义金额输入界面模板
-const userCustomAmountCanvas = (conversationId, adminId = "unknown", agentName = "Support Agent") => ({
-    canvas: {
-        content: {
-            components: [
-                { type: "text", text: "✨ Custom Tip Amount", style: "header" },
-                {
-                    type: "input",
-                    id: "custom_amount_input",
-                    label: "Enter amount ($)",
-                    placeholder: "e.g. 15",
-                },
-                {
-                    type: "button",
-                    label: "Confirm",
-                    style: "primary",
-                    id: `tip_custom_submit:${adminId}`,
-                    action: { type: "submit" },
-                },
-                {
-                    type: "button",
-                    label: "← Back",
-                    style: "secondary",
-                    id: `back_to_main:${adminId}`,
-                    action: { type: "submit" },
-                },
-            ],
+const userCustomAmountCanvas = (conversationId, adminId = "unknown", agentName = "Support Agent", error = null) => {
+    const components = [
+        { type: "text", text: "✨ Custom Tip Amount", style: "header" },
+    ]
+
+    if (error) {
+        components.push({
+            type: "text",
+            text: `⚠️ ${error}`,
+            style: "error",
+            align: "center",
+        })
+    }
+
+    components.push(
+        {
+            type: "input",
+            id: "custom_amount_input",
+            label: "Enter amount ($)",
+            placeholder: "e.g. 15",
         },
-        metadata: { conversationId, adminId, agentName, currentView: "custom_input" },
-    },
-})
+        {
+            type: "button",
+            label: "Confirm",
+            style: "primary",
+            id: `tip_custom_submit:${adminId}`,
+            action: { type: "submit" },
+        },
+        {
+            type: "button",
+            label: "← Back",
+            style: "secondary",
+            id: `back_to_main:${adminId}`,
+            action: { type: "submit" },
+        }
+    )
+
+    return {
+        canvas: {
+            content: {
+                components: components,
+            },
+            metadata: { conversationId, adminId, agentName, currentView: "custom_input" },
+        }
+    }
+}
 
 // 用户端支付跳转界面模板
 const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, isProcessing = false, agentName = "Support Agent", actionConfig = null, error = null) => {

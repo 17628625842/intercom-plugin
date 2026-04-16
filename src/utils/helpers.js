@@ -154,28 +154,6 @@ function extractAgentName(req) {
     return 'Support Agent';
 }
 
-/**
- * 判断请求是否来自 App
- * 逻辑：如果不是明确的浏览器环境，则视为 App 环境
- * @param {object} req - 请求对象
- * @returns {boolean} 是否来自 App
- */
-function isFromApp(req) {
-  logWithPrefix('isFromApp', '开始判断请求是否来自 App', req);
-    const customer = req.body.contact || {};
-    const browser = (customer.browser || '').toLowerCase();
-    
-    // 定义明确的浏览器标识
-    const knownBrowsers = ['chrome', 'safari', 'firefox', 'edge', 'opera', 'ie', 'mobile_safari'];
-    
-    // 如果浏览器标识在已知列表中，说明是浏览器环境，返回 false
-    if (browser && knownBrowsers.includes(browser)) {
-        return false;
-    }
-
-    // 否则（如 browser 为 unknown, null, 或包含 intercom 等），视为 App 环境
-    return true;
-}
 
 module.exports = {
     extractAgentName,
@@ -184,5 +162,4 @@ module.exports = {
     getAdminIdFromComponentId,
     logWithPrefix,
     generateSocketSignature,
-    isFromApp,
 };
