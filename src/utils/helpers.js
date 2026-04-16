@@ -74,6 +74,7 @@ function extractConversationId(req) {
     }
   }
   
+const { log } = require("console");
   const crypto = require("crypto")
 
 /**
@@ -159,6 +160,7 @@ function extractAgentName(req) {
  * @returns {boolean} 是否来自 App
  */
 function isFromApp(req) {
+    logWithPrefix('isFromApp', '开始判断请求是否来自 App', req.body);
     // 1. 检查 customer/contact 对象中的 app 信息
     const customer = req.body.customer || req.body.contact || {};
     
