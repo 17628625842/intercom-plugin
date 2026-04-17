@@ -50,6 +50,72 @@ const adminSuccessCanvas = (conversationId) => ({
     },
 })
 
+// 客服评价主界面模板
+const adminReviewMainCanvas = (conversationId) => ({
+    canvas: {
+        content: {
+            components: [
+                { type: "text", text: "⭐ 发送评价卡片", style: "header" },
+                {
+                    type: "button",
+                    id: "send_review_card",
+                    label: "发送",
+                    style: "primary",
+                    action: {
+                        type: "submit",
+                    },
+                },
+            ],
+        },
+        metadata: { conversationId, currentView: "review_main" },
+    },
+})
+
+// 客服评价发送成功界面模板
+const adminReviewSuccessCanvas = (conversationId) => ({
+    canvas: {
+        content: {
+            components: [
+                { type: "text", text: "✅ 已发送评价卡片", style: "header" },
+                { type: "divider" },
+                { type: "text", text: "⭐ 发送评价卡片", style: "header" },
+                {
+                    type: "button",
+                    id: "send_review_card",
+                    label: "发送",
+                    style: "primary",
+                    action: {
+                        type: "submit",
+                    },
+                },
+            ],
+        },
+        metadata: { conversationId, currentView: "review_success" },
+    },
+})
+
+// 用户端评价主界面模板
+const userReviewCanvas = (conversationId, agentName, reviewUrl) => ({
+    canvas: {
+        content: {
+            components: [
+                { type: "text", text: `⭐ Review ${agentName}`, style: "header" },
+                { type: "text", text: "Your feedback helps us improve! ✨", style: "muted" },
+                {
+                    type: "button",
+                    label: "Go to Review",
+                    style: "primary",
+                    action: {
+                        type: "url",
+                        url: reviewUrl
+                    },
+                },
+            ],
+        },
+        metadata: { conversationId, agentName, currentView: "review" },
+    },
+})
+
 // 用户端打赏主界面模板
 const userMainCanvas = (conversationId, agentName, adminId = "unknown") => ({
     canvas: {
@@ -205,7 +271,10 @@ const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, i
 module.exports = {
     adminMainCanvas,
     adminSuccessCanvas,
+    adminReviewMainCanvas,
+    adminReviewSuccessCanvas,
     userMainCanvas,
     userCustomAmountCanvas,
     userPaymentCanvas,
+    userReviewCanvas,
 }

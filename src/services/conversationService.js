@@ -11,7 +11,6 @@ class ConversationService {
     /**
      * 生成卡片创建选项
      * @param {string} adminId - 客服 ID
-     * @param {string} adminName - 客服名称
      * @param {string} conversationId - 对话 ID
      * @returns {object} 卡片创建选项
      */
