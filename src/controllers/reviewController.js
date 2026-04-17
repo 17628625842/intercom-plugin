@@ -37,7 +37,7 @@ const agentSubmit = (req, res) => {
  * 用户端初始化 - 显示评价界面
  */
 const userInitialize = (req, res) => {
-    logWithPrefix("🔍", `评价重定向 - 请求头: ${req.headers}`)
+    logWithPrefix("🔍", `评价重定向 - 请求头: `, req.headers)
 
     const conversationId = extractConversationId(req)
     const agentName = "Support Agent"
