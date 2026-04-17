@@ -54,6 +54,7 @@ const userInitialize = (req, res) => {
  * 评价重定向 - 根据设备跳转到不同的商店
  */
 const userRedirect = (req, res) => {
+    logWithPrefix("🔍", `评价重定向 - 请求头: ${JSON.stringify(req.headers)}`)
     const userAgent = req.headers['user-agent'] || '';
     const isApple = /iPhone|iPad|iPod|Macintosh/i.test(userAgent);
     
