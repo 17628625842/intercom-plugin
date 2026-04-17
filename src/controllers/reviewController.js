@@ -47,6 +47,7 @@ const userInitialize = (req, res) => {
     const reviewUrl = `${protocol}://${host}/review/user/redirect`;
     
     const response = userReviewCanvas(conversationId, agentName, reviewUrl)
+    logWithPrefix("🔍", `评价用户端 - 初始化 响应: ${JSON.stringify(response)}`)
     res.json(response)
 }
 
