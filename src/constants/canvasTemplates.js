@@ -106,7 +106,7 @@ const userReviewCanvas = (conversationId, agentName) => ({
                     label: "Go to Review",
                     style: "primary",
                     action: {
-                        type: "button",
+                        type: "submit",
                     },
                 },
             ],

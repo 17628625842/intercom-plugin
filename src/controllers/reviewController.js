@@ -37,7 +37,6 @@ const agentSubmit = (req, res) => {
  * 用户端初始化 - 显示评价界面
  */
 const userInitialize = (req, res) => {
-
     const conversationId = extractConversationId(req)
     const agentName = "Support Agent"
     const response = userReviewCanvas(conversationId, agentName)
