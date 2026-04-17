@@ -37,18 +37,10 @@ const agentSubmit = (req, res) => {
  * 用户端初始化 - 显示评价界面
  */
 const userInitialize = (req, res) => {
-    logWithPrefix("🔍", `评价重定向 - 请求头: `, req.headers)
 
     const conversationId = extractConversationId(req)
     const agentName = "Support Agent"
-    
-    logWithPrefix("🔍", `评价用户端 - 初始化 对话 ID: ${conversationId}`)
-    
-    const protocol = req.headers['x-forwarded-proto'] || 'http';
-    const host = req.headers.host;
-    const reviewUrl = `${protocol}://${host}/review/user/redirect`;
-    
-    const response = userReviewCanvas(conversationId, agentName, reviewUrl)
+    const response = userReviewCanvas(conversationId, agentName)
     res.json(response)
 }
 
@@ -56,7 +48,7 @@ const userInitialize = (req, res) => {
  * 评价重定向 - 根据设备跳转到不同的商店
  */
 const userRedirect = (req, res) => {
-    logWithPrefix("🔍", `评价重定向 - 请求头: ${req.headers}`)
+    logWithPrefix("🔍", `评价重定向 - 请求头:`, req.headers)
     const userAgent = req.headers['user-agent'] || '';
     const isApple = /iPhone|iPad|iPod|Macintosh/i.test(userAgent);
     
