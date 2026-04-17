@@ -151,7 +151,7 @@ const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, i
     const components = [
         {
             type: "text",
-            text: `💰 打赏金额: $${amount}`,
+            text: `💰 Tip Amount: $${amount}`,
             style: "header",
             align: "center",
         },
@@ -186,7 +186,7 @@ const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, i
     if (isProcessing) {
         components.push({
             type: "text",
-            text: "For payment details, please visit the [Personal Center -> Account -> Balance] page to view them.",
+            text: "For payment details, please visit the [wallet] page to view them.",
             style: "muted",
             align: "center",
         })
