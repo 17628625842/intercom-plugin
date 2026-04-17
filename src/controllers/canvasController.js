@@ -30,6 +30,7 @@ const initialize = (req, res) => {
  */
 const submit = (req, res) => {
     const { component_id, card_creation_options, context, input_values, customer, user, current_canvas } = req.body
+    logWithPrefix("🔍", `用户端提交 -`, req.body)
     
     // 优先级：请求体中的 options > 当前卡片的 metadata > 从 component_id 解析 > 兜底
     let adminId = card_creation_options?.admin_id || current_canvas?.metadata?.adminId;
