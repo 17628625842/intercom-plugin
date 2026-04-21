@@ -13,6 +13,6 @@ router.post('/agent/submit', reviewController.agentSubmit);
 router.post('/user/initialize', reviewController.userInitialize);
 
 // 评价重定向 - 根据设备跳转到不同的商店
-router.get('/user/submit', reviewController.userRedirect);
+router.post('/user/submit', reviewController.userRedirect);
 
 module.exports = router;

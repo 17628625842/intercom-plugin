@@ -39,15 +39,10 @@ const agentSubmit = (req, res) => {
 const userInitialize = (req, res) => {
     const conversationId = extractConversationId(req)
     const agentName = extractAgentName(req) || "Support Agent"
-    
+
     logWithPrefix("🔍", `评价用户端 - 初始化 对话 ID: ${conversationId}`)
-    
-    const protocol = req.headers['x-forwarded-proto'] || 'http';
-    const host = req.headers.host;
-    // 对应路由中的 /user/submit
-    const reviewUrl = `${protocol}://${host}/review/user/submit`;
-    
-    const response = userReviewCanvas(conversationId, agentName, reviewUrl)
+
+    const response = userReviewCanvas(conversationId, agentName)
     res.json(response)
 }
 
@@ -56,17 +51,17 @@ const userInitialize = (req, res) => {
  */
 const userRedirect = (req, res) => {
     logWithPrefix("🔍", `评价重定向 - 请求头:`, req.headers)
-    const userAgent = req.headers['user-agent'] || '';
-    const isApple = /iPhone|iPad|iPod|Macintosh/i.test(userAgent);
-    
-    const appleStoreUrl = 'https://apps.apple.com/cn/app/mulebuy-buy-from-china/id6744265394';
-    const googlePlayUrl = 'https://play.google.com/store/apps/details?id=com.mulebuy.app';
-    
-    const targetUrl = isApple ? appleStoreUrl : googlePlayUrl;
-    
-    logWithPrefix("🔗", `评价重定向 - 设备: ${isApple ? 'Apple' : 'Other'}, 跳转: ${targetUrl}`);
-    
-    res.redirect(targetUrl);
+    const userAgent = req.headers["user-agent"] || ""
+    const isApple = /iPhone|iPad|iPod|Macintosh/i.test(userAgent)
+
+    const appleStoreUrl = "https://apps.apple.com/cn/app/mulebuy-buy-from-china/id6744265394"
+    const googlePlayUrl = "https://play.google.com/store/apps/details?id=com.mulebuy.app"
+
+    const targetUrl = isApple ? appleStoreUrl : googlePlayUrl
+
+    logWithPrefix("🔗", `评价重定向 - 设备: ${isApple ? "Apple" : "Other"}, 跳转: ${targetUrl}`)
+
+    res.redirect(targetUrl)
 }
 
 module.exports = {
