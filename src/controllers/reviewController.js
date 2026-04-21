@@ -1,4 +1,4 @@
-const { extractConversationId, logWithPrefix } = require("../utils/helpers")
+const { extractConversationId, logWithPrefix, extractAgentName } = require("../utils/helpers")
 const { adminReviewMainCanvas, adminReviewSuccessCanvas, userReviewCanvas } = require("../constants/canvasTemplates")
 const conversationService = require("../services/conversationService")
 
@@ -16,14 +16,13 @@ const agentInitialize = (req, res) => {
  * 客服端提交 - 发送评价卡片
  */
 const agentSubmit = (req, res) => {
-    const conversationId = extractConversationId(req) || req.body.canvas?.metadata?.conversationId || "unknown"
+    const { canvas, current_canvas } = req.body
+    const conversationId = extractConversationId(req) || canvas?.metadata?.conversationId || current_canvas?.metadata?.conversationId || "unknown"
     const adminId = req.body.admin?.id || "unknown"
     logWithPrefix("🔍", `评价客服端 - 发送评价卡片 对话 ID: ${conversationId}`)
 
     // 生成卡片创建选项 (标记为 review 类型，虽然现在有独立接口，但 card_creation_options 还是需要的)
     const cardCreationOptions = conversationService.generateCardCreationOptions(adminId, conversationId)
-    // 强制标记类型，以便用户端初始化时识别
-    cardCreationOptions.type = "review"
 
     const response = {
         ...adminReviewSuccessCanvas(conversationId),
@@ -38,8 +37,16 @@ const agentSubmit = (req, res) => {
  */
 const userInitialize = (req, res) => {
     const conversationId = extractConversationId(req)
-    const agentName = "Support Agent"
-    const response = userReviewCanvas(conversationId, agentName)
+    const agentName = extractAgentName(req) || "Support Agent"
+    
+    logWithPrefix("🔍", `评价用户端 - 初始化 对话 ID: ${conversationId}`)
+    
+    const protocol = req.headers['x-forwarded-proto'] || 'http';
+    const host = req.headers.host;
+    // 对应路由中的 /user/submit
+    const reviewUrl = `${protocol}://${host}/review/user/submit`;
+    
+    const response = userReviewCanvas(conversationId, agentName, reviewUrl)
     res.json(response)
 }
 

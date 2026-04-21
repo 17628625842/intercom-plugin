@@ -11,6 +11,7 @@ function extractConversationId(req) {
       req.body.context?.conversation_id,
       req.body.conversation?.id,
       req.body.canvas?.metadata?.conversationId,
+      req.body.current_canvas?.metadata?.conversationId,
       req.body.conversationId,
       req.body.id,
       req.body.card_creation_options?.conversationId,
