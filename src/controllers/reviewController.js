@@ -1,5 +1,5 @@
 const { extractConversationId, logWithPrefix, extractAgentName } = require("../utils/helpers")
-const { adminReviewMainCanvas, adminReviewSuccessCanvas, userReviewCanvas } = require("../constants/canvasTemplates")
+const { adminReviewMainCanvas, userReviewCanvas } = require("../constants/canvasTemplates")
 const conversationService = require("../services/conversationService")
 
 /**
@@ -7,7 +7,7 @@ const conversationService = require("../services/conversationService")
  */
 const agentInitialize = (req, res) => {
     const conversationId = extractConversationId(req) || "unknown"
-    logWithPrefix("🔍", `评价客服端 - 初始化 对话 ID: ${conversationId}`, req.body)
+    logWithPrefix("🔍", `评价客服端 - 初始化 对话 ID: ${conversationId}`)
     const response = adminReviewMainCanvas(conversationId)
     res.json(response)
 }
@@ -21,11 +21,14 @@ const agentSubmit = (req, res) => {
     const adminId = req.body.admin?.id || "unknown"
     logWithPrefix("🔍", `评价客服端 - 发送评价卡片 对话 ID: ${conversationId}`)
 
-    // 生成卡片创建选项 (标记为 review 类型，虽然现在有独立接口，但 card_creation_options 还是需要的)
+    // 配置流程完成后，Intercom 需要 results 来触发“把卡片放入输入框”
     const cardCreationOptions = conversationService.generateCardCreationOptions(adminId, conversationId)
+    cardCreationOptions.type = "review"
 
     const response = {
-        ...adminReviewSuccessCanvas(conversationId),
+        // 官方 configure flow 完成字段
+        results: cardCreationOptions,
+        // 兼容旧逻辑字段
         card_creation_options: cardCreationOptions,
     }
 
