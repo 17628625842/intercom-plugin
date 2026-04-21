@@ -42,19 +42,44 @@ const userInitialize = (req, res) => {
 
     logWithPrefix("🔍", `评价用户端 - 初始化 对话 ID: ${conversationId}`)
 
-    logWithPrefix("🔍", `评价重定向 - 请求头:`, req.headers)
-    const userAgent = req.headers["user-agent"] || ""
-    const isApple = /iPhone|iPad|iPod|Macintosh/i.test(userAgent)
+    const protocol = req.headers["x-forwarded-proto"] || "http"
+    const host = req.headers.host
+    const targetUrl = `${protocol}://${host}/review/user/open-store`
 
-    const appleStoreUrl = "https://apps.apple.com/cn/app/mulebuy-buy-from-china/id6744265394"
+    const response = userReviewCanvas(conversationId, agentName, targetUrl)
+    res.json(response)
+}
+
+/**
+ * 用户端空白页 - 在前端判断设备并跳转商店
+ */
+const userOpenStorePage = (req, res) => {
+    const appleStoreUrl = "https://apps.apple.com/app/id6744265394?action=write-review"
     const googlePlayUrl = "https://play.google.com/store/apps/details?id=com.mulebuy.app"
 
-    const targetUrl = isApple ? appleStoreUrl : googlePlayUrl
+    const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecting...</title>
+</head>
+<body>
+  <script>
+    (function () {
+      var ua = navigator.userAgent || "";
+      var isIOS = /iPhone|iPad|iPod|Macintosh/i.test(ua);
+      var appleStoreUrl = ${JSON.stringify(appleStoreUrl)};
+      var googlePlayUrl = ${JSON.stringify(googlePlayUrl)};
+      var targetUrl = isIOS ? appleStoreUrl : googlePlayUrl;
+      window.location.replace(targetUrl);
+    })();
+  </script>
+</body>
+</html>`
 
-    logWithPrefix("🔗", `评价重定向 - 设备: ${isApple ? "Apple" : "Other"}, 跳转: ${targetUrl}`)
-
-    const response = userReviewCanvas(conversationId, agentName, appleStoreUrl)
-    res.json(response)
+    res.setHeader("Content-Type", "text/html; charset=utf-8")
+    res.send(html)
 }
 
 /**
@@ -79,5 +104,6 @@ module.exports = {
     agentInitialize,
     agentSubmit,
     userInitialize,
+    userOpenStorePage,
     userRedirect,
 }
