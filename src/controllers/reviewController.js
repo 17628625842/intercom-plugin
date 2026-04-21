@@ -53,7 +53,7 @@ const userInitialize = (req, res) => {
 
     logWithPrefix("🔗", `评价重定向 - 设备: ${isApple ? "Apple" : "Other"}, 跳转: ${targetUrl}`)
 
-    const response = userReviewCanvas(conversationId, agentName, targetUrl)
+    const response = userReviewCanvas(conversationId, agentName, appleStoreUrl)
     res.json(response)
 }
 
