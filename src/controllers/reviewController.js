@@ -1,5 +1,5 @@
 const { extractConversationId, logWithPrefix, extractAgentName } = require("../utils/helpers")
-const { adminReviewMainCanvas, userReviewCanvas } = require("../constants/canvasTemplates")
+const { adminReviewMainCanvas, adminReviewSuccessCanvas, userReviewCanvas } = require("../constants/canvasTemplates")
 const conversationService = require("../services/conversationService")
 
 /**
@@ -21,14 +21,12 @@ const agentSubmit = (req, res) => {
     const adminId = req.body.admin?.id || "unknown"
     logWithPrefix("🔍", `评价客服端 - 发送评价卡片 对话 ID: ${conversationId}`)
 
-    // 配置流程完成后，Intercom 需要 results 来触发“把卡片放入输入框”
+    // 对齐打赏功能：返回 canvas + card_creation_options
     const cardCreationOptions = conversationService.generateCardCreationOptions(adminId, conversationId)
     cardCreationOptions.type = "review"
 
     const response = {
-        // 官方 configure flow 完成字段
-        results: cardCreationOptions,
-        // 兼容旧逻辑字段
+        ...adminReviewSuccessCanvas(conversationId),
         card_creation_options: cardCreationOptions,
     }
 
