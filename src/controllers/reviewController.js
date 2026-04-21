@@ -42,7 +42,18 @@ const userInitialize = (req, res) => {
 
     logWithPrefix("🔍", `评价用户端 - 初始化 对话 ID: ${conversationId}`)
 
-    const response = userReviewCanvas(conversationId, agentName)
+    logWithPrefix("🔍", `评价重定向 - 请求头:`, req.headers)
+    const userAgent = req.headers["user-agent"] || ""
+    const isApple = /iPhone|iPad|iPod|Macintosh/i.test(userAgent)
+
+    const appleStoreUrl = "https://apps.apple.com/cn/app/mulebuy-buy-from-china/id6744265394"
+    const googlePlayUrl = "https://play.google.com/store/apps/details?id=com.mulebuy.app"
+
+    const targetUrl = isApple ? appleStoreUrl : googlePlayUrl
+
+    logWithPrefix("🔗", `评价重定向 - 设备: ${isApple ? "Apple" : "Other"}, 跳转: ${targetUrl}`)
+
+    const response = userReviewCanvas(conversationId, agentName, targetUrl)
     res.json(response)
 }
 
