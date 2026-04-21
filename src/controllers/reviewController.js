@@ -55,7 +55,7 @@ const userInitialize = (req, res) => {
  */
 const userOpenStorePage = (req, res) => {
     const appleStoreUrl = "https://apps.apple.com/app/id6744265394?action=write-review"
-    const googlePlayUrl = "https://play.google.com/store/apps/details?id=com.mulebuy.app"
+    const googlePlayUrl = "https://play.google.com/store/apps/details?id=com.mulebuyapp"
 
     const html = `<!doctype html>
 <html lang="en">
