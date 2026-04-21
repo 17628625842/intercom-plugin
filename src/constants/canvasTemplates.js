@@ -95,20 +95,18 @@ const adminReviewSuccessCanvas = (conversationId) => ({
 })
 
 // 用户端评价主界面模板
-const userReviewCanvas = (conversationId, agentName, reviewUrl) => ({
+const userReviewCanvas = (conversationId, agentName) => ({
     canvas: {
         content: {
             components: [
-                { type: "text", text: `⭐ Review ${agentName}`, style: "header" },
+                { type: "text", text: `⭐ Review`, style: "header" },
                 { type: "text", text: "Your feedback helps us improve! ✨", style: "muted" },
                 {
                     type: "button",
                     label: "Go to Review",
                     style: "primary",
-                    action: {
-                        type: "url",
-                        url: reviewUrl,
-                    },
+                    id: `go_to_review`,
+                    action: { type: "submit" },
                 },
             ],
         },
