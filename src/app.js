@@ -26,7 +26,7 @@ app.get('/open/app', (req, res) => {
 });
 
 // 健康检查
-app.get('/health', (req, res) => {
+app.get('/', (req, res) => {
   res.json({ 
     status: 'healthy', 
     timestamp: new Date().toISOString(),
