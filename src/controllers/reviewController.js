@@ -7,7 +7,7 @@ const conversationService = require("../services/conversationService")
  */
 const agentInitialize = (req, res) => {
     const conversationId = extractConversationId(req) || "unknown"
-    logWithPrefix("🔍", `评价客服端 - 初始化 对话 ID: ${conversationId}`)
+    logWithPrefix("🔍", `评价客服端 - 初始化 对话 ID: ${conversationId}`, req.body)
     const response = adminReviewMainCanvas(conversationId)
     res.json(response)
 }
