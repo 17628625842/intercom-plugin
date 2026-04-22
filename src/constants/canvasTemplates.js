@@ -164,9 +164,7 @@ const userMainCanvas = (conversationId, agentName, adminId = "unknown") => ({
 
 // 用户端自定义金额输入界面模板
 const userCustomAmountCanvas = (conversationId, adminId = "unknown", agentName = "Support Agent", error = null) => {
-    const components = [
-        { type: "text", text: "✨ Custom Tip Amount", style: "header" },
-    ]
+    const components = [{ type: "text", text: "✨ Custom Tip Amount", style: "header" }]
 
     if (error) {
         components.push({
@@ -197,7 +195,7 @@ const userCustomAmountCanvas = (conversationId, adminId = "unknown", agentName =
             style: "secondary",
             id: `back_to_main:${adminId}`,
             action: { type: "submit" },
-        }
+        },
     )
 
     return {
@@ -206,61 +204,40 @@ const userCustomAmountCanvas = (conversationId, adminId = "unknown", agentName =
                 components: components,
             },
             metadata: { conversationId, adminId, agentName, currentView: "custom_input" },
-        }
+        },
     }
 }
 
 // 用户端支付跳转界面模板
-const userPaymentCanvas = (adminId, amount, conversationId, socketInfo = null, isProcessing = false, agentName = "Support Agent", actionConfig = null, error = null) => {
-    const components = [
-        {
-            type: "text",
-            text: `💰 Tip Amount: $${amount}`,
-            style: "header",
-            align: "center",
-        },
-    ]
-
-    if (error) {
-        components.push({
-            type: "text",
-            text: `⚠️ ${error}`,
-            style: "error",
-            align: "center",
-        })
-    }
-
-    const payAction = actionConfig || { type: "submit" };
-
-    components.push({
-        type: "button",
-        label: "Go to pay",
-        style: "primary",
-        id: `go_to_pay_${amount}:${adminId}`, // 将金额和 adminId 编码进 ID
-        action: payAction,
-    })
-    components.push({
-        type: "button",
-        label: "← Back",
-        style: "secondary",
-        id: `back_to_amounts:${adminId}`,
-        action: { type: "submit" },
-    })
-
-    if (isProcessing) {
-        components.push({
-            type: "text",
-            text: "For payment details, please visit the [wallet] page to view them.",
-            style: "muted",
-            align: "center",
-        })
-    }
-
+const userPaymentCanvas = (amount, targetUrl) => {
     const canvas = {
         content: {
-            components: components,
+            components: [
+                {
+                    type: "text",
+                    text: `💰 Tip Amount: $${amount}`,
+                    style: "header",
+                    align: "center",
+                },
+                {
+                    type: "button",
+                    label: "Go to pay",
+                    style: "primary",
+                    id: `go_to_pay`, // 将金额和 adminId 编码进 ID
+                    action: {
+                        type: "url",
+                        url: targetUrl,
+                    },
+                },
+                {
+                    type: "button",
+                    label: "← Back",
+                    style: "secondary",
+                    id: `back_to_amounts`,
+                    action: { type: "submit" },
+                },
+            ],
         },
-        metadata: { conversationId, adminId, agentName, socketInfo, amount: String(amount) },
     }
 
     return { canvas }

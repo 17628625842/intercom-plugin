@@ -36,11 +36,36 @@ const openAppView = (queryParams = '') => {
         p { font-size: 14px; color: #86868b; }
     </style>
     <script>
-        window.onload = function() {
+        async function fetchTokenByTicket(ticketId) {
+            try {
+                const response = await fetch('/api/ticket/' + ticketId);
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.token;
+                }
+            } catch (error) {
+                console.error('Fetch token error:', error);
+            }
+            return null;
+        }
+
+        window.onload = async function() {
             // 获取当前页面的所有查询参数
-            const queryParams = window.location.search;
+            const urlParams = new URLSearchParams(window.location.search);
+            const ticketId = urlParams.get('ticketId');
+            
+            let tokenData = '';
+            if (ticketId) {
+                const token = await fetchTokenByTicket(ticketId);
+                if (token) {
+                    // 将 token 对象转为字符串并进行 base64 编码，方便传输
+                    tokenData = '&token=' + encodeURIComponent(JSON.stringify(token));
+                }
+            }
+
             // 构造 App Scheme URL
-            const appScheme = 'mulebuy://' + (queryParams || '');
+            const queryParams = window.location.search;
+            const appScheme = 'mulebuy://' + (queryParams || '') + tokenData;
             
             console.log('Attempting to open App with scheme:', appScheme);
             
