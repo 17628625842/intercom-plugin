@@ -209,7 +209,7 @@ const userCustomAmountCanvas = (conversationId, adminId = "unknown", agentName =
 }
 
 // 用户端支付跳转界面模板
-const userPaymentCanvas = (amount, targetUrl) => {
+const userPaymentCanvas = (adminId, amount, targetUrl) => {
     const canvas = {
         content: {
             components: [
@@ -233,7 +233,7 @@ const userPaymentCanvas = (amount, targetUrl) => {
                     type: "button",
                     label: "← Back",
                     style: "secondary",
-                    id: `back_to_amounts`,
+                    id: `back_to_amounts:${adminId}`,
                     action: { type: "submit" },
                 },
             ],

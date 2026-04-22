@@ -88,8 +88,8 @@ const submit = (req, res) => {
         // --- 安全增强：生成短效一次性票据 ---
         const ticketId = tokenController.exchangeTicket(userId)
 
-        // 使用固定的 baseUrl
-        const baseUrl = "https://mulebuy.com"
+        // 优先从环境变量读取，未配置时使用默认值
+        const baseUrl = process.env.PAYMENT_BASE_URL || "http://172.16.2.236:8095/"
 
         // 无论何种环境，都跳转到 H5 页面
         const targetUrl = `${baseUrl}?ticketId=${ticketId || ""}&amount=${amount}&adminId=${adminId}`
@@ -97,7 +97,7 @@ const submit = (req, res) => {
         logWithPrefix("🌐", `设置按钮跳转 H5 URL (Ticket 模式): ${targetUrl}`)
 
         // 返回支付跳转界面
-        return res.json(userPaymentCanvas(amount, targetUrl))
+        return res.json(userPaymentCanvas(adminId, amount, targetUrl))
     }
 
     // 兜底返回主界面
