@@ -95,7 +95,7 @@ const submit = (req, res) => {
         // 无论何种环境，都跳转到 H5 页面
         const targetUrl = `${baseUrl}?ticketId=${ticketId || ""}&amount=${amount}&adminId=${adminId}`
 
-        logWithPrefix("🌐", `设置按钮跳转 H5 URL (Ticket 模式): ${h5PayUrl}`)
+        logWithPrefix("🌐", `设置按钮跳转 H5 URL (Ticket 模式): ${targetUrl}`)
 
         // 返回支付跳转界面
         return res.json(userPaymentCanvas(amount, targetUrl))
