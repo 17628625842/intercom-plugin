@@ -33,6 +33,8 @@ const saveToken = (req, res) => {
  */
 const exchangeTicket = (userId) => {
     const userData = userTokenMap.get(String(userId));
+    logWithPrefix("🔍", `查询用户 Token: userId=${userId}`);
+    
     if (!userData || (Date.now() - userData.timestamp > TOKEN_TTL)) {
         userTokenMap.delete(String(userId));
         return null;
