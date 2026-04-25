@@ -1,4 +1,4 @@
-const { extractConversationId, getAmountFromComponentId, getAdminIdFromComponentId, logWithPrefix, generateSocketSignature } = require("../utils/helpers")
+const { extractConversationId, getAmountFromComponentId, getAgentNameFromComponentId, logWithPrefix, generateSocketSignature } = require("../utils/helpers")
 const { userMainCanvas, userCustomAmountCanvas, userPaymentCanvas } = require("../constants/canvasTemplates")
 const tokenController = require("./tokenController")
 
@@ -11,11 +11,10 @@ const initialize = (req, res) => {
 
     const cardCreationOptions = req.body.card_creation_options || {}
     const agentName = cardCreationOptions.agent_name || "Support Agent"
-    let adminId = cardCreationOptions.admin_id || "unknown"
 
-    logWithPrefix("🔍", `用户端初始化 - 客服: ${agentName} (${adminId})`)
+    logWithPrefix("🔍", `用户端初始化 - 客服: ${agentName}`)
 
-    const response = userMainCanvas(conversationId, agentName, adminId)
+    const response = userMainCanvas(conversationId, agentName)
     res.json(response)
 }
 
@@ -25,38 +24,33 @@ const initialize = (req, res) => {
 const submit = (req, res) => {
     const { component_id, card_creation_options, context, input_values, customer, user, current_canvas } = req.body
 
-    // 优先级：请求体中的 options > 当前卡片的 metadata > 从 component_id 解析 > 兜底
-    let adminId = card_creation_options?.admin_id || current_canvas?.metadata?.adminId
-
-    // 如果上面都没拿到，尝试从按钮 ID 中提取（最可靠的持久化方案）
-    if (!adminId || adminId === "unknown") {
-        const extractedAdminId = getAdminIdFromComponentId(component_id)
-        if (extractedAdminId) {
-            adminId = extractedAdminId
-            logWithPrefix("🔗", `从组件 ID 提取到客服 ID: ${adminId}`)
+    let agentName = card_creation_options?.agent_name || current_canvas?.metadata?.agentName
+    if (!agentName) {
+        const extractedAgentName = getAgentNameFromComponentId(component_id)
+        if (extractedAgentName) {
+            agentName = extractedAgentName
+            logWithPrefix("🔗", `从组件 ID 提取到客服名称: ${agentName}`)
         }
     }
-    if (!adminId) adminId = "unknown"
-
-    const agentName = card_creation_options?.agent_name || current_canvas?.metadata?.agentName || "Support Agent"
+    if (!agentName) agentName = "Support Agent"
 
     const conversationId = context?.conversation_id || current_canvas?.metadata?.conversationId || extractConversationId(req) || "unknown"
 
     // 鲁棒性获取 userId
     const userId = user?.external_id || user?.user_id || customer?.user_id || customer?.id || "unknown"
 
-    // 获取基础的 component_id (去掉 :adminId 部分)
+    // 获取基础的 component_id
     const baseComponentId = component_id.split(":")[0]
 
-    logWithPrefix("🎯", `用户操作: ${baseComponentId}, 客服: ${agentName} (${adminId}), 对话: ${conversationId}`)
+    logWithPrefix("🎯", `用户操作: ${baseComponentId}, 客服: ${agentName}, 对话: ${conversationId}`)
 
     // 1. 处理视图切换
     if (baseComponentId === "show_custom_input") {
-        return res.json(userCustomAmountCanvas(conversationId, adminId, agentName))
+        return res.json(userCustomAmountCanvas(conversationId, agentName))
     }
 
     if (baseComponentId === "back_to_main" || baseComponentId === "back_to_amounts") {
-        return res.json(userMainCanvas(conversationId, agentName, adminId))
+        return res.json(userMainCanvas(conversationId, agentName))
     }
 
     // 2. 获取打赏金额
@@ -72,12 +66,12 @@ const submit = (req, res) => {
 
         if (!amount || isNaN(amount) || amount <= 0) {
             logWithPrefix("⚠️", "无效的自定义金额，返回输入界面")
-            return res.json(userCustomAmountCanvas(conversationId, adminId, agentName, "Please enter a valid amount greater than 0."))
+            return res.json(userCustomAmountCanvas(conversationId, agentName, "Please enter a valid amount greater than 0."))
         }
 
         if (amount > 999) {
             logWithPrefix("⚠️", `自定义金额超出上限: ${amount}`)
-            return res.json(userCustomAmountCanvas(conversationId, adminId, agentName, "Maximum tip amount is $999."))
+            return res.json(userCustomAmountCanvas(conversationId, agentName, "Maximum tip amount is $999."))
         }
     }
 
@@ -92,16 +86,16 @@ const submit = (req, res) => {
         const baseUrl = process.env.PAYMENT_BASE_URL || "http://172.16.2.236:8095/"
 
         // 无论何种环境，都跳转到 H5 页面
-        const targetUrl = `${baseUrl}?ticketId=${ticketId || ""}&amount=${amount}&adminId=${adminId}&agentName=${encodeURIComponent(agentName)}`
+        const targetUrl = `${baseUrl}?ticketId=${ticketId || ""}&amount=${amount}&agentName=${encodeURIComponent(agentName)}`
 
         logWithPrefix("🌐", `设置按钮跳转 H5 URL (Ticket 模式): ${targetUrl}`)
 
         // 返回支付跳转界面
-        return res.json(userPaymentCanvas(adminId, amount, targetUrl))
+        return res.json(userPaymentCanvas(amount, targetUrl, agentName))
     }
 
     // 兜底返回主界面
-    res.json(userMainCanvas(conversationId, agentName, adminId))
+    res.json(userMainCanvas(conversationId, agentName))
 }
 
 module.exports = {

@@ -57,6 +57,22 @@ function extractConversationId(req) {
     if (!componentId || !componentId.includes(':')) return null;
     return componentId.split(':')[1];
   }
+
+  /**
+   * 从组件 ID 中提取客服名称
+   * @param {string} componentId - 组件 ID
+   * @returns {string|null} 客服名称
+   */
+  function getAgentNameFromComponentId(componentId) {
+    if (!componentId || !componentId.includes(':')) return null;
+    const encoded = componentId.split(':')[1];
+    if (!encoded) return null;
+    try {
+      return decodeURIComponent(encoded);
+    } catch {
+      return encoded;
+    }
+  }
   
   /**
    * 格式化日志输出
@@ -161,6 +177,7 @@ module.exports = {
     extractConversationId,
     getAmountFromComponentId,
     getAdminIdFromComponentId,
+    getAgentNameFromComponentId,
     logWithPrefix,
     generateSocketSignature,
 };

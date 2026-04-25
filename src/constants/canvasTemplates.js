@@ -49,55 +49,59 @@ const adminSuccessCanvas = (conversationId) => ({
 })
 
 // 用户端打赏主界面模板
-const userMainCanvas = (conversationId, agentName, adminId = "unknown") => ({
-    canvas: {
-        content: {
-            components: [
-                { type: "text", text: `❤️ Thank ${agentName}!`, style: "header" },
-                { type: "text", text: "Your support means a lot ✨", style: "muted" },
-                {
-                    type: "button",
-                    label: "💵 $1",
-                    style: "secondary",
-                    id: `tip_1:${adminId}`,
-                    action: { type: "submit" },
-                },
-                {
-                    type: "button",
-                    label: "💵 $5",
-                    style: "secondary",
-                    id: `tip_5:${adminId}`,
-                    action: { type: "submit" },
-                },
-                {
-                    type: "button",
-                    label: "💵 $10",
-                    style: "secondary",
-                    id: `tip_10:${adminId}`,
-                    action: { type: "submit" },
-                },
-                {
-                    type: "button",
-                    label: "💵 $20",
-                    style: "secondary",
-                    id: `tip_20:${adminId}`,
-                    action: { type: "submit" },
-                },
-                {
-                    type: "button",
-                    label: "✨ Custom Amount",
-                    style: "secondary",
-                    id: `show_custom_input:${adminId}`,
-                    action: { type: "submit" },
-                },
-            ],
+const userMainCanvas = (conversationId, agentName = "Support Agent") => {
+    const encodedAgentName = encodeURIComponent(agentName)
+    return {
+        canvas: {
+            content: {
+                components: [
+                    { type: "text", text: `❤️ Thank ${agentName}!`, style: "header" },
+                    { type: "text", text: "Your support means a lot ✨", style: "muted" },
+                    {
+                        type: "button",
+                        label: "💵 $1",
+                        style: "secondary",
+                        id: `tip_1:${encodedAgentName}`,
+                        action: { type: "submit" },
+                    },
+                    {
+                        type: "button",
+                        label: "💵 $5",
+                        style: "secondary",
+                        id: `tip_5:${encodedAgentName}`,
+                        action: { type: "submit" },
+                    },
+                    {
+                        type: "button",
+                        label: "💵 $10",
+                        style: "secondary",
+                        id: `tip_10:${encodedAgentName}`,
+                        action: { type: "submit" },
+                    },
+                    {
+                        type: "button",
+                        label: "💵 $20",
+                        style: "secondary",
+                        id: `tip_20:${encodedAgentName}`,
+                        action: { type: "submit" },
+                    },
+                    {
+                        type: "button",
+                        label: "✨ Custom Amount",
+                        style: "secondary",
+                        id: `show_custom_input:${encodedAgentName}`,
+                        action: { type: "submit" },
+                    },
+                ],
+            },
+            metadata: { conversationId, agentName, currentView: "main" },
         },
-        metadata: { conversationId, adminId, agentName, currentView: "main" },
-    },
-})
+    }
+}
 
 // 用户端自定义金额输入界面模板
-const userCustomAmountCanvas = (conversationId, adminId = "unknown", agentName = "Support Agent", error = null) => {
+const userCustomAmountCanvas = (conversationId, agentName = "Support Agent", error = null) => {
+    const encodedAgentName = encodeURIComponent(agentName)
     const components = [{ type: "text", text: "✨ Custom Tip Amount", style: "header" }]
 
     if (error) {
@@ -120,14 +124,14 @@ const userCustomAmountCanvas = (conversationId, adminId = "unknown", agentName =
             type: "button",
             label: "Confirm",
             style: "primary",
-            id: `tip_custom_submit:${adminId}`,
+            id: `tip_custom_submit:${encodedAgentName}`,
             action: { type: "submit" },
         },
         {
             type: "button",
             label: "← Back",
             style: "secondary",
-            id: `back_to_main:${adminId}`,
+            id: `back_to_main:${encodedAgentName}`,
             action: { type: "submit" },
         },
     )
@@ -137,13 +141,14 @@ const userCustomAmountCanvas = (conversationId, adminId = "unknown", agentName =
             content: {
                 components: components,
             },
-            metadata: { conversationId, adminId, agentName, currentView: "custom_input" },
+            metadata: { conversationId, agentName, currentView: "custom_input" },
         },
     }
 }
 
 // 用户端支付跳转界面模板
-const userPaymentCanvas = (adminId, amount, targetUrl) => {
+const userPaymentCanvas = (amount, targetUrl, agentName = "Support Agent") => {
+    const encodedAgentName = encodeURIComponent(agentName)
     const canvas = {
         content: {
             components: [
@@ -167,7 +172,7 @@ const userPaymentCanvas = (adminId, amount, targetUrl) => {
                     type: "button",
                     label: "← Back",
                     style: "secondary",
-                    id: `back_to_amounts:${adminId}`,
+                    id: `back_to_amounts:${encodedAgentName}`,
                     action: { type: "submit" },
                 },
             ],
