@@ -10,7 +10,7 @@ const initialize = (req, res) => {
     logWithPrefix("🎯", `Canvas 用户端 - 对话 ID: ${conversationId}`)
 
     const cardCreationOptions = req.body.card_creation_options || {}
-    const agentName = "Support Agent"
+    const agentName = cardCreationOptions.agent_name || "Support Agent"
     let adminId = cardCreationOptions.admin_id || "unknown"
 
     logWithPrefix("🔍", `用户端初始化 - 客服: ${agentName} (${adminId})`)
@@ -38,7 +38,7 @@ const submit = (req, res) => {
     }
     if (!adminId) adminId = "unknown"
 
-    const agentName = "Support Agent"
+    const agentName = card_creation_options?.agent_name || current_canvas?.metadata?.agentName || "Support Agent"
 
     const conversationId = context?.conversation_id || current_canvas?.metadata?.conversationId || extractConversationId(req) || "unknown"
 
@@ -92,7 +92,7 @@ const submit = (req, res) => {
         const baseUrl = process.env.PAYMENT_BASE_URL || "http://172.16.2.236:8095/"
 
         // 无论何种环境，都跳转到 H5 页面
-        const targetUrl = `${baseUrl}?ticketId=${ticketId || ""}&amount=${amount}&adminId=${adminId}`
+        const targetUrl = `${baseUrl}?ticketId=${ticketId || ""}&amount=${amount}&adminId=${adminId}&agentName=${encodeURIComponent(agentName)}`
 
         logWithPrefix("🌐", `设置按钮跳转 H5 URL (Ticket 模式): ${targetUrl}`)
 

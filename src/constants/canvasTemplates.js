@@ -8,8 +8,7 @@ const adminMainCanvas = (conversationId) => ({
         content: {
             components: [
                 { type: "text", text: "💝 发送打赏卡片", style: "header" },
-                // { type: "spacer", size: "m" },
-                // { type: "input", id: "agent_name_input", label: "您的英文名", placeholder: "请输入您的名字" },
+                { type: "input", id: "agent_name_input", label: "客服名称", placeholder: "请输入客服名称" },
                 {
                     type: "button",
                     id: "send_tip_card",
@@ -33,8 +32,7 @@ const adminSuccessCanvas = (conversationId) => ({
                 { type: "text", text: "✅ 已发送", style: "header" },
                 { type: "divider" },
                 { type: "text", text: "💝 发送打赏卡片", style: "header" },
-                // { type: "spacer", size: "m" },
-                // { type: "input", id: "agent_name_input", label: "您的英文名", placeholder: "请输入您的名字" },
+                { type: "input", id: "agent_name_input", label: "客服名称", placeholder: "请输入客服名称" },
                 {
                     type: "button",
                     id: "send_tip_card",
@@ -47,70 +45,6 @@ const adminSuccessCanvas = (conversationId) => ({
             ],
         },
         metadata: { conversationId, currentView: "success" },
-    },
-})
-
-// 客服评价主界面模板
-const adminReviewMainCanvas = (conversationId) => ({
-    canvas: {
-        content: {
-            components: [
-                { type: "text", text: "⭐ 发送评价卡片", style: "header" },
-                {
-                    type: "button",
-                    id: "send_review_card",
-                    label: "发送",
-                    style: "primary",
-                    action: {
-                        type: "submit",
-                    },
-                },
-            ],
-        },
-        metadata: { conversationId, currentView: "review_main" },
-    },
-})
-
-// 客服评价发送成功界面模板
-const adminReviewSuccessCanvas = (conversationId) => ({
-    canvas: {
-        content: {
-            components: [
-                { type: "text", text: "✅ 已发送评价卡片", style: "header" },
-                { type: "divider" },
-                { type: "text", text: "⭐ 发送评价卡片", style: "header" },
-                {
-                    type: "button",
-                    id: "send_review_card",
-                    label: "发送",
-                    style: "primary",
-                    action: {
-                        type: "submit",
-                    },
-                },
-            ],
-        },
-        metadata: { conversationId, currentView: "review_success" },
-    },
-})
-
-// 用户端评价主界面模板
-const userReviewCanvas = (conversationId, agentName, targetUrl) => ({
-    canvas: {
-        content: {
-            components: [
-                { type: "text", text: `⭐ Review`, style: "header" },
-                { type: "text", text: "Your feedback helps us improve! ✨", style: "muted" },
-                {
-                    type: "button",
-                    label: "Go to Review",
-                    style: "primary",
-                    id: `go_to_review`,
-                    action: { type: "url", url: targetUrl },
-                },
-            ],
-        },
-        metadata: { conversationId, agentName, currentView: "review" },
     },
 })
 
@@ -246,10 +180,7 @@ const userPaymentCanvas = (adminId, amount, targetUrl) => {
 module.exports = {
     adminMainCanvas,
     adminSuccessCanvas,
-    adminReviewMainCanvas,
-    adminReviewSuccessCanvas,
     userMainCanvas,
     userCustomAmountCanvas,
     userPaymentCanvas,
-    userReviewCanvas,
 }

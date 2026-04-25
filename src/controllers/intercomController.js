@@ -17,15 +17,16 @@ const initialize = (req, res) => {
  * 客服端提交 - 处理按钮点击
  */
 const submit = (req, res) => {
-    const { component_id, canvas } = req.body
+    const { component_id, canvas, input_values } = req.body
     const conversationId = extractConversationId(req) || canvas?.metadata?.conversationId || "unknown"
     const adminId = req.body.admin?.id || "unknown"
-    // 获取输入框中的名字
-    // const inputAgentName = req.body.input_values?.agent_name_input?.trim();
+    const inputAgentName = input_values?.agent_name_input?.trim()
+    const agentName = inputAgentName || extractAgentName(req) || "Support Agent"
     logWithPrefix("🔍", `客服操作: ${component_id}, 对话 ID: ${conversationId}`)
+    logWithPrefix("📝", `客服名称: ${agentName}`)
 
     // 生成卡片创建选项
-    const cardCreationOptions = conversationService.generateCardCreationOptions(adminId, conversationId)
+    const cardCreationOptions = conversationService.generateCardCreationOptions(adminId, conversationId, agentName)
 
     // 返回响应，包含更新后的界面和卡片创建选项
     const response = {

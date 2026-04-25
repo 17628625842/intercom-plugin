@@ -12,12 +12,14 @@ class ConversationService {
      * 生成卡片创建选项
      * @param {string} adminId - 客服 ID
      * @param {string} conversationId - 对话 ID
+     * @param {string} agentName - 客服名称
      * @returns {object} 卡片创建选项
      */
-    generateCardCreationOptions(adminId, conversationId) {
+    generateCardCreationOptions(adminId, conversationId, agentName = "Support Agent") {
       return {
         admin_id: adminId,
         conversationId: conversationId,
+        agent_name: agentName,
         created_at: new Date().toISOString(),
       };
     }
