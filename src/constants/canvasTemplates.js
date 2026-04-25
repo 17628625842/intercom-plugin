@@ -175,6 +175,12 @@ const userPaymentCanvas = (amount, targetUrl, agentName = "Support Agent") => {
                     id: `back_to_amounts:${encodedAgentName}`,
                     action: { type: "submit" },
                 },
+                {
+                    type: "text",
+                    text: "For payment details, please visit the [wallet] page to view them.",
+                    style: "muted",
+                    align: "center",
+                },
             ],
         },
     }
